@@ -12,3 +12,5 @@ add_executable(1619.cpp 1619.cpp)
 add_executable(1529.cpp 1529.cpp)
 
 add_executable(482.cpp 482.cpp)
+
+add_executable(564.cpp 564.cpp)

@@ -137,6 +137,7 @@ int main(){
     }
     quicksort(test, 0, (int) test.size() - 1);
 
+    cout << endl;
     for (vector<Comparable*>::iterator itr = test.begin(), end = test.end(); itr != end; ++itr){
         (*itr)->print();
     }

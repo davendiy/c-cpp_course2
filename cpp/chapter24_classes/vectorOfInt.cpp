@@ -116,7 +116,7 @@ vectorOfInt& vectorOfInt::operator=(const vectorOfInt &other) {
 }
 
 
-// resize array of length _size into array of length _size + 1
+// resize array of length _size into array of length _size + 4096
 void vectorOfInt::_growUp() {
     int *_tmp_vector = new int[_size + 1];
     for (VECTOR_INT i = 0; i < _size; i++){
@@ -124,5 +124,5 @@ void vectorOfInt::_growUp() {
     }
     delete _vector;
     _vector = _tmp_vector;
-    _size++;
+    _size += 1;
 }

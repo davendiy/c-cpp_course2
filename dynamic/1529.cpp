@@ -91,7 +91,7 @@ int main(){
     string test;
     unsigned long len = 0;
     double **dp;
-    dp = create_array(2500);
+    dp = create_array(3000);
     while (true){
         getline(cin, test, '\n');
         if (test.empty()) break;

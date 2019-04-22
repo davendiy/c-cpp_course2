@@ -107,3 +107,13 @@ target_link_libraries(test_vector vectorOfInt)
 add_executable(chapter26_polymorph_practice chapter26_polymorph/practic.cpp)
 
 add_executable(chapter26_homework chapter26_polymorph/homework.cpp)
+
+add_executable(chapter28_file_practice chapter28_file/practice.cpp)
+
+add_executable(xml_parser xml_parser/xml_parser.cpp)
+
+add_executable(chapter29_templates_practice chapter29_templates/practice.cpp)
+
+add_executable(chapter29_templates_vector chapter29_templates/Vector.cpp)
+
+add_executable(final_test final_test.cpp)
