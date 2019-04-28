@@ -7,8 +7,8 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "stdlib.h"
 #include <iostream>
+#include "stdlib.h"
 
 using namespace std;
 
@@ -26,13 +26,18 @@ string OPERATIONS = "+-/*";
 class Stack{
 public:
 
+    Stack(){
+        cur_pos = 0;
+    }
+
     int pop(){
         int result;
         if (cur_pos == 0){
-            throw 1;
+            throw 0;
         }
-        result = array[cur_pos];
         cur_pos--;
+        result = array[cur_pos];
+        cout << "pop from stack: " << result << endl;
         return result;
     };
 
@@ -40,6 +45,7 @@ public:
         if (cur_pos >= 1000){
             throw 1;
         }
+        cout << "pushing to stack: " << element << endl;
         array[cur_pos] = element;
         cur_pos++;
     };
@@ -50,10 +56,11 @@ public:
 
 private:
     int array[1000];
-    int cur_pos = 0;
+    int cur_pos;
 };
 
 Stack STACK;
+vector<string> CODE;
 
 /* NORM PAIRS:  ( and NUMBER,
  *              NUMBER and OPERATION,
@@ -100,9 +107,9 @@ Token getLeftBr(string &expression);
 
 Token getRightBr(string &expression);
 
-void term(vector<string> &code, vector<Token> &tokens);
-void factor(vector<string> &code, vector<Token> &tokens);
-void factor(vector<string> &code, vector<Token> &tokens);
+void term(vector<Token> &tokens);
+void factor(vector<Token> &tokens);
+void factor(vector<Token> &tokens);
 
 Token getNumber(string &expression) {
     string res_text = "";
@@ -219,43 +226,51 @@ vector<Token> tokenizer(string &expression){
     while (true){
         Token tmp;
         tmp = getToken(tmp_expression);
-        if (tmp.left_str.empty()) break;
-
+        if (tmp.left_str.empty()){
+            result.push_back(tmp);
+            break;
+        }
+        tmp_expression = tmp.left_str;
+        tmp.left_str = "";
         result.push_back(tmp);
     }
     return result;
 }
 
 void pop(vector<Token> &array){
-    for (int i = 0; i < array.size()-1; i++){
-        array[i] = array[i + 1];
-    };
+    for (int i = 0; i < array.size()-1; i++)
+    {
+        array[i] = array[i+1];
+    }
+
     array.pop_back();
 }
 
 
-void expression(vector<string> &code, vector<Token> &tokens){
-    term(code, tokens);
-    while (!tokens.empty() and ((tokens[0].str == "+" or tokens[0].str == "-"))){
-            term(code, tokens);
-            code.push_back(tokens[0].str);
-            pop(tokens);
-           }
+void expression(vector<Token> &tokens){
+    term(tokens);
+    while (!tokens.empty() and ((tokens[0].str == "+" || tokens[0].str == "-"))){
+        string tmp = tokens[0].str;
+        pop(tokens);
+        term(tokens);
+        CODE.push_back(tmp);
+    }
 
 }
 
 
-void term(vector<string> &code, vector<Token> &tokens){
-    factor(code, tokens);
+void term(vector<Token> &tokens){
+    factor(tokens);
     while(!tokens.empty() && (tokens[0].str == "*" || tokens[0].str == "/")){
-        factor (code, tokens);
-        code.push_back(tokens[0].str);
+        string tmp = tokens[0].str;
         pop(tokens);
+        factor (tokens);
+        CODE.push_back(tmp);
     }
 }
 
 
-void factor(vector<string> &code, vector<Token> &tokens){
+void factor(vector<Token> &tokens){
     int n = 1;
     if (tokens[0].type == LEFT_BR){
         int t = 0;
@@ -265,24 +280,31 @@ void factor(vector<string> &code, vector<Token> &tokens){
             if (t == 0){
                 vector<Token> tmp_tokens;
                 pop(tokens);
-                for (int i = 1; i < n-1; i++){
-                    tmp_tokens.push_back(tokens[i]);
+                for (int i = 0; i < n-2; i++){
+                    tmp_tokens.push_back(tokens[0]);
                     pop(tokens);
                 }
                 pop(tokens);
-                expression(code, tmp_tokens);
+                expression(tmp_tokens);
                 break;
             } n++;
         }
-    } else { STACK.push((atol(tokens[0].str.c_str())));
+    } else { CODE.push_back((tokens[0].str.c_str()));
         pop(tokens);
     }
 }
 
+void print(){
+    for (vector<string>::iterator itr = CODE.begin(); itr != CODE.end(); ++itr){
+        cout << *itr << endl;
+    }
 
-int execute(vector<string> &code){
+}
 
-    for (vector<string>::iterator itr = code.begin(); itr != code.end(); ++itr){
+
+int execute(){
+    print();
+    for (vector<string>::iterator itr = CODE.begin(); itr != CODE.end(); ++itr){
 
         if (*itr == "+"){
             int tmp_add1 = STACK.pop();
@@ -291,7 +313,7 @@ int execute(vector<string> &code){
         } else if (*itr == "-"){
             int tmp_sub1 = STACK.pop();
             int tmp_sub2 = STACK.pop();
-            STACK.push(tmp_sub1 - tmp_sub2);
+            STACK.push(tmp_sub2 - tmp_sub1);
         } else if (*itr == "*"){
             int tmp_mul1 = STACK.pop();
             int tmp_mul2 = STACK.pop();
@@ -299,7 +321,9 @@ int execute(vector<string> &code){
         } else if (*itr == "/"){
             int tmp_div1 = STACK.pop();
             int tmp_div2 = STACK.pop();
-            STACK.push(tmp_div1 / tmp_div2);
+            STACK.push(tmp_div2 / tmp_div1);
+        } else {
+            STACK.push(atoi((*itr).c_str()));
         }
     }
     return STACK.pop();
@@ -308,7 +332,7 @@ int execute(vector<string> &code){
 
 int main(){
     ifstream file("/home/davidas/Документы/univer/c-cpp_course2/cpp/input.txt", ios::in);
-    char tmp_symbol = ' ';
+    char tmp_symbol;
     string str = "";
     while(file >> tmp_symbol){
         str += tmp_symbol;
@@ -318,16 +342,14 @@ int main(){
         return 1;
     }
 
-    vector<string> test_code;
     vector<Token> test_tokens;
 
     test_tokens = tokenizer(str);
-    expression(test_code, test_tokens);
-    int res = execute(test_code);
+    expression(test_tokens);
+    int res = execute();
     cout << res;
     return 0;
 }
-
 
 
 
