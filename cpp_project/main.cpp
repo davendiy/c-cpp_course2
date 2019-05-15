@@ -1,6 +1,9 @@
 #include <iostream>
+#include "tensor.h"
+#include <cassert>
 
-int main() {
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+int main(){
+
+    void *test;
+    test = reinterpret_cast<void*>(createNDimArray<INT>(8));
 }

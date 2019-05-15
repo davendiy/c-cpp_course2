@@ -14,3 +14,5 @@ add_executable(1529.cpp 1529.cpp)
 add_executable(482.cpp 482.cpp)
 
 add_executable(564.cpp 564.cpp)
+
+add_executable(samsung_previous.cpp samsung_previous.cpp)
