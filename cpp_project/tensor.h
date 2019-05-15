@@ -30,13 +30,17 @@ class Tensor{
 public:
     Tensor();
     Tensor(ARRAY_SIZE dimension, const ARRAY_SIZE *shape);
+    explicit Tensor(TYPE element);
     Tensor(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_SIZE *shape);
     Tensor reshape(ARRAY_SIZE new_dimension, const ARRAY_SIZE *new_shape);
 //    ~Tensor();
 
     TYPE* chain();
 
+    Tensor<TYPE> &operator=(const Tensor<TYPE> &other);
+    Tensor<TYPE> &operator[](ARRAY_SIZE n);
 
+    Tensor<TYPE> &copy();
 private:
     ARRAY_SIZE mDimension = 0;
     MemoryItem<TYPE> *mArray;
@@ -55,6 +59,7 @@ private:
     void createChain(MemoryItem<TYPE> *array, ARRAY_SIZE dimLevel, TYPE *resArray, ARRAY_SIZE &startIndex);
     void fillArrayFromChain(MemoryItem<TYPE> *array, ARRAY_SIZE dimLevel, TYPE *_chain,
             ARRAY_SIZE &startIndex);
+
 };
 
 
@@ -137,6 +142,19 @@ Tensor<TYPE>::Tensor()
         ,mArray(nullptr)
 {}
 
+// constructor from single element
+template<typename TYPE>
+Tensor<TYPE>::Tensor(TYPE element)
+        :mShape(nullptr)
+        ,mArray(nullptr)
+{
+    mShape = new ARRAY_SIZE[1];
+    mShape[0] = 1;
+    mArray = new MemoryItem<TYPE>[1];
+    mArray[0].next = nullptr;
+    mArray[0].value = element;
+    mDimension = 1;
+}
 
 // constructor of an n-dimension array (m1, m2, m3, ...) of zeros
 template<typename TYPE>
@@ -164,7 +182,7 @@ Tensor<TYPE>::Tensor(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_
     for (ARRAY_SIZE itr = 0; itr < dimension; ++itr){
         mShape[itr] = shape[itr];
     }
-    mArray = copyNDimArray(array, dimension, shape, 0);
+    mArray = array;
 }
 
 //// destructor
@@ -259,6 +277,40 @@ Tensor<TYPE> Tensor<TYPE>::reshape(ARRAY_SIZE new_dimension, const ARRAY_SIZE *n
     ARRAY_SIZE startIndex = 0;
     fillArrayFromChain(newArray, 0, _chain, startIndex);
     mArray = newArray;
+}
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::copy() {
+    auto *res = new Tensor<TYPE>(mDimension, mShape);
+    res->mArray = copyNDimArray(mArray, mDimension, mShape, 0);
+    return *res;
+}
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator=(const Tensor<TYPE> &other) {
+    if (this != &other){
+        this->mArray = other.mArray;
+        this->mDimension = other.mDimension;
+        this->mShape = other.mShape;
+    }
+    return *this;
+}
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator[](ARRAY_SIZE n) {
+    if (n > mShape[0] || n < 0){
+        throw std::out_of_range("index is out of range");
+    } else if (mDimension > 1){
+        auto *newShape = new ARRAY_SIZE[mDimension - 1];
+        for (ARRAY_SIZE itr = 0; itr < mDimension - 1; ++itr){
+            newShape[itr] = mShape[itr+1];
+        }
+        auto *res = new Tensor<TYPE>(mArray[n].next, mDimension - 1, newShape);
+        return *res;
+    } else {
+        auto *res = new Tensor<TYPE>(mArray[n].value);
+        return *res;
+    }
 }
 
 #endif //CPP_PROJECT_TENSOR_H
