@@ -19,6 +19,13 @@ int main(){
     test_shape2[0] = 4;
     test.reshape(1, test_shape2);
     test.print();
+    cutting cut1;
+    cut1.start = 0;
+    cut1.end = 3;
+    cut1.step = 2;
+    test[&cut1].print();
+
+
     test[0] = Tensor<int>(5);
     test[1] = Tensor<int>(6);
     test.print();
@@ -26,11 +33,19 @@ int main(){
     test.reshape(2, test_shape);
 
     test_shape = new ARRAY_SIZE[3];
-    test_shape[0] = 2;
+    test_shape[0] = 3;
     test_shape[1] = 2;
     test_shape[2] = 2;
     Tensor<int> test2(3, test_shape);
 
     test2[0] = test;
     test2.print();
+
+    cutting tmp;
+    tmp.start = 2;
+    tmp.end = -1;
+    tmp.step = -2;
+    auto test3 = test2[&tmp];
+    test3.print();
+
 }
