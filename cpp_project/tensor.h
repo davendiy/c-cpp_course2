@@ -41,6 +41,9 @@ public:
     Tensor<TYPE> &operator[](ARRAY_SIZE n);
 
     Tensor<TYPE> &copy();
+
+    void print();
+
 private:
     ARRAY_SIZE mDimension = 0;
     MemoryItem<TYPE> *mArray;
@@ -60,11 +63,16 @@ private:
     void fillArrayFromChain(MemoryItem<TYPE> *array, ARRAY_SIZE dimLevel, TYPE *_chain,
             ARRAY_SIZE &startIndex);
 
+    void printNDimArray(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel);
+
+    void copyValues(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2, ARRAY_SIZE dimension, const ARRAY_SIZE *shape,
+            ARRAY_SIZE dimLevel);
 };
 
 
 // ====================================== N_DIM_ARRAY ==================================================================
 
+// recursive function to create n dimensional array like tree
 template<typename TYPE>
 MemoryItem<TYPE>* Tensor<TYPE>::createNDimArray(ARRAY_SIZE dimension, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel){
     if (dimension < 1){
@@ -85,6 +93,7 @@ MemoryItem<TYPE>* Tensor<TYPE>::createNDimArray(ARRAY_SIZE dimension, const ARRA
 }
 
 
+// create n dimension array like tree
 template<typename TYPE>
 MemoryItem<TYPE>* Tensor<TYPE>::createNDimArray(ARRAY_SIZE dimension, const ARRAY_SIZE *shape){
     return createNDimArray(dimension, shape, 0);
@@ -105,7 +114,7 @@ void Tensor<TYPE>::deleteNDimArray(MemoryItem<TYPE> *array, ARRAY_SIZE dimension
 }
 
 
-// copy of n-dimensional array
+// full copy of n-dimensional array
 template <typename TYPE>
 MemoryItem<TYPE>* Tensor<TYPE>::copyNDimArray(MemoryItem<TYPE> *array,ARRAY_SIZE dimension, const ARRAY_SIZE *shape,
                                               ARRAY_SIZE dimLevel) {
@@ -127,6 +136,7 @@ MemoryItem<TYPE>* Tensor<TYPE>::copyNDimArray(MemoryItem<TYPE> *array,ARRAY_SIZE
     return res;
 }
 
+// non-recursive function for deleting
 template <typename TYPE>
 void Tensor<TYPE>::deleteNDimArray(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_SIZE *shape) {
     deleteNDimArray(array, dimension, shape, 0);
@@ -194,7 +204,7 @@ Tensor<TYPE>::Tensor(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_
 //}
 
 
-// recursive fill the chain array
+// recursively fill the chain array
 template<typename TYPE>
 void Tensor<TYPE>::createChain(MemoryItem<TYPE> *array, ARRAY_SIZE dimLevel, TYPE *resArray, ARRAY_SIZE &startIndex) {
     if (mDimension - dimLevel < 1){
@@ -230,6 +240,7 @@ TYPE* Tensor<TYPE>::chain() {
     }
 }
 
+// fills n dimensional array from 1-dimensional chain
 template <typename TYPE>
 void Tensor<TYPE>::fillArrayFromChain(MemoryItem<TYPE> *array, ARRAY_SIZE dimLevel, TYPE *_chain,
                                       ARRAY_SIZE &startIndex) {
@@ -279,6 +290,7 @@ Tensor<TYPE> Tensor<TYPE>::reshape(ARRAY_SIZE new_dimension, const ARRAY_SIZE *n
     mArray = newArray;
 }
 
+// full copy of tensor
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::copy() {
     auto *res = new Tensor<TYPE>(mDimension, mShape);
@@ -286,16 +298,25 @@ Tensor<TYPE>& Tensor<TYPE>::copy() {
     return *res;
 }
 
+// x1 = x2 copying all the values from x2 to x1
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator=(const Tensor<TYPE> &other) {
     if (this != &other){
-        this->mArray = other.mArray;
-        this->mDimension = other.mDimension;
-        this->mShape = other.mShape;
+        if (this->mDimension != other.mDimension) throw std::invalid_argument("different dimensions");
+        bool success = true;
+        for (ARRAY_SIZE itr = 0; itr < this->mDimension; ++itr)
+            if (this->mShape[itr] != other.mShape[itr]){
+                success = false;
+                break;
+            }
+        if (!success) throw std::invalid_argument("different shapes");
+
+        copyValues(this->mArray, other.mArray, mDimension, mShape, 0);
     }
     return *this;
 }
 
+// returns n-1 dimensional element of tensor (even if this element just simple value)
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator[](ARRAY_SIZE n) {
     if (n > mShape[0] || n < 0){
@@ -308,8 +329,50 @@ Tensor<TYPE>& Tensor<TYPE>::operator[](ARRAY_SIZE n) {
         auto *res = new Tensor<TYPE>(mArray[n].next, mDimension - 1, newShape);
         return *res;
     } else {
-        auto *res = new Tensor<TYPE>(mArray[n].value);
+        auto *tmpArr = &mArray[n];
+        auto *tmpShape = new ARRAY_SIZE[1];
+        tmpShape[0] = 1;
+        auto *res = new Tensor<TYPE>(tmpArr, 1, tmpShape);
         return *res;
+    }
+}
+
+template<typename TYPE>
+void Tensor<TYPE>::print() {
+    printNDimArray(mArray, mDimension, mShape, 0);
+    std::cout << std::endl;
+}
+
+
+template<typename TYPE>
+void Tensor<TYPE>::printNDimArray(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_SIZE *shape,
+                                  ARRAY_SIZE dimLevel) {
+    if (dimension == 1){
+        for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
+            std::cout << array[itr].value << ' ';
+        }
+        std::cout << std::endl;
+    } else {
+        for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
+            printNDimArray(array[itr].next, dimension-1, shape, dimLevel+1);
+            for (ARRAY_SIZE i = 0; i < dimension-2; i++){
+                std::cout << std::endl;
+            }
+        }
+    }
+}
+
+template <typename TYPE>
+void Tensor<TYPE>::copyValues(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2, ARRAY_SIZE dimension,
+                              const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
+    if (dimension == 1){
+        for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
+            array1[itr].value = array2[itr].value;
+        }
+    } else {
+        for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr) {
+            copyValues(array1[itr].next, array2[itr].next, dimension - 1, shape, dimLevel + 1);
+        }
     }
 }
 
