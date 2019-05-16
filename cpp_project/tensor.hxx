@@ -79,10 +79,17 @@ public:
      * of elements of tensor  (tensor[start:end:step] in python). */
     Tensor<TYPE> &operator[](cutting *slice);
 
+    /* Overload of arithmetic operations with 2 tensors*/
     Tensor<TYPE> &operator+(const Tensor<TYPE> &other);
     Tensor<TYPE> &operator-(const Tensor<TYPE> &other);
     Tensor<TYPE> &operator*(const Tensor<TYPE> &other);
     Tensor<TYPE> &operator/(const Tensor<TYPE> &other);
+
+    /* Overload of arithmetic operations with tensor and constant*/
+    Tensor<TYPE> &operator+(TYPE singleElement);
+    Tensor<TYPE> &operator-(TYPE singleElement);
+    Tensor<TYPE> &operator*(TYPE singleElement);
+    Tensor<TYPE> &operator/(TYPE singleElement);
 
     /* Create full copy of tensor */
     Tensor<TYPE> &copy();
@@ -93,13 +100,14 @@ public:
     /* Print tensor in the given output */
     void write(std::ostream &stream);
 
+    /* static functions for standard arithmetic operations */
     static TYPE sum(TYPE x, TYPE y){ return x + y; };
-
     static TYPE sub(TYPE x, TYPE y){ return x - y; };
-
     static TYPE mul(TYPE x, TYPE y){ return x - y; };
-
-    static TYPE div(TYPE x, TYPE y){ return x / y; };
+    static TYPE div(TYPE x, TYPE y){
+        if (y == 0) throw std::invalid_argument("Divide by zero");
+        return x / y;
+    };
 
 private:
 
@@ -202,9 +210,28 @@ private:
                     ARRAY_SIZE dimLevel);
 
 
-    void doUnaryOperation(TYPE (*ptr2Func)(TYPE ), MemoryItem<TYPE> *array, MemoryItem<TYPE> *resArray,
-            ARRAY_SIZE dimensional, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel);
+    /* Auxiliary recursive function for realisation of operations between tensor and constant
+     *
+     * @param ptr2Func: pointer to function from 2 arguments (first argument - element of tensor, second - constant)
+     * @param array: root of tree of tensor
+     * @param singleElement: constant;
+     * @param resArray: root of tree of the result tensor
+     * @param dimension: depth of the tree
+     * @param shape: all the shapes of the tree
+     * @param dimLevel: start index of elements from shape, that relate to given rootl */
+    void doUnaryOperation(TYPE (*ptr2Func)(TYPE , TYPE ), MemoryItem<TYPE> *array, TYPE singleElement,
+            MemoryItem<TYPE> *resArray, ARRAY_SIZE dimension, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel);
 
+
+    /* Auxiliary recursive function for realisation of operations between two tensors
+     *
+     * @param ptr2Func: pointer to function from 2 arguments (1-rst argument - element of 1-rst tensor, 2-nd - of 2-nd)
+     * @param array1: root of tree of 1-rst tensor
+     * @param array2: root of tree of 2-nd tensor
+     * @param resArray: root of tree of the result tensor
+     * @param dimension: depth of the tree
+     * @param shape: all the shapes of the tree
+     * @param dimLevel: start index of elements from shape, that relate to given rootl */
     void doBinaryOperation(TYPE (*ptr2Func)(TYPE , TYPE ), MemoryItem<TYPE> *array1,
             MemoryItem<TYPE> *array2, MemoryItem<TYPE> *resArray, ARRAY_SIZE dimensional, const ARRAY_SIZE *shape,
             ARRAY_SIZE dimLevel);
@@ -566,16 +593,18 @@ Tensor<TYPE>& Tensor<TYPE>::operator[](cutting *slice) {
     }
 }
 
+// ---------------------------------------ARITHMETIC OPERATORS ---------------------------------------------------------
 template <typename TYPE>
-void Tensor<TYPE>::doUnaryOperation(TYPE (*ptr2Func)(TYPE ), MemoryItem<TYPE> *array, MemoryItem<TYPE> *resArray,
-                                     ARRAY_SIZE dimensional, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
-    if (dimensional == 1){
+void Tensor<TYPE>::doUnaryOperation(TYPE (*ptr2Func)(TYPE ,TYPE ), MemoryItem<TYPE> *array, TYPE singleElement,
+        MemoryItem<TYPE> *resArray, ARRAY_SIZE dimension, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
+    if (dimension == 1){
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
-            resArray[itr].value = (*ptr2Func)(array[itr].value);
+            resArray[itr].value = (*ptr2Func)(array[itr].value, singleElement);
         }
     } else {
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
-            doUnaryOperation(ptr2Func, array[itr].next, resArray[itr].next, dimensional-1, shape, dimLevel + 1);
+            doUnaryOperation(ptr2Func, array[itr].next, singleElement, resArray[itr].next, dimension-1, shape,
+                    dimLevel + 1);
         }
     }
 }
@@ -644,6 +673,42 @@ Tensor<TYPE>& Tensor<TYPE>::operator/(const Tensor<TYPE> &other) {
     checkSame(this->mDimension, other.mDimension, this->mShape, other.mShape);
     auto *result = new Tensor<TYPE>(mDimension, mShape);
     doBinaryOperation(&Tensor<TYPE>::div, this->mArray, other.mArray, result->mArray, this->mDimension, this->mShape, 0);
+    return *result;
+}
+
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator+(TYPE singleElement) {
+    auto *result = new Tensor<TYPE>(mDimension, mShape);
+
+    doUnaryOperation(Tensor<TYPE>::sum, this->mArray, singleElement, result->mArray, this->mDimension, this->mShape, 0);
+    return *result;
+}
+
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator-(TYPE singleElement) {
+    auto *result = new Tensor<TYPE>(mDimension, mShape);
+
+    doUnaryOperation(Tensor<TYPE>::sub, this->mArray, singleElement, result->mArray, this->mDimension, this->mShape, 0);
+    return *result;
+}
+
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator*(TYPE singleElement) {
+    auto *result = new Tensor<TYPE>(mDimension, mShape);
+
+    doUnaryOperation(Tensor<TYPE>::mul, this->mArray, singleElement, result->mArray, this->mDimension, this->mShape, 0);
+    return *result;
+}
+
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator/(TYPE singleElement) {
+    auto *result = new Tensor<TYPE>(mDimension, mShape);
+
+    doUnaryOperation(Tensor<TYPE>::div, this->mArray, singleElement, result->mArray, this->mDimension, this->mShape, 0);
     return *result;
 }
 
