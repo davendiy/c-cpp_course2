@@ -5,8 +5,8 @@
 //
 
 #include <iostream>
+#include <fstream>
 #include "tensor.h"
-
 
 
 // ====================================== N_DIM_ARRAY ==================================================================
@@ -257,18 +257,18 @@ Tensor<TYPE>& Tensor<TYPE>::operator=(const Tensor<TYPE> &other) {
 
 // returns n-1 dimensional element of tensor (even if this element just simple value)
 template<typename TYPE>
-Tensor<TYPE>& Tensor<TYPE>::operator[](ARRAY_SIZE n) {
-    if (n > mShape[0] || n < 0){
+Tensor<TYPE>& Tensor<TYPE>::operator[](ARRAY_SIZE i) {
+    if (i > mShape[0] || i < 0){
         throw std::out_of_range("index is out of range");
     } else if (mDimension > 1){
         auto *newShape = new ARRAY_SIZE[mDimension - 1];
         for (ARRAY_SIZE itr = 0; itr < mDimension - 1; ++itr){
             newShape[itr] = mShape[itr+1];
         }
-        auto *res = new Tensor<TYPE>(mArray[n].next, mDimension - 1, newShape);
+        auto *res = new Tensor<TYPE>(mArray[i].next, mDimension - 1, newShape);
         return *res;
     } else {Tensor<TYPE>();
-        auto *tmpArr = &mArray[n];
+        auto *tmpArr = &mArray[i];
         auto *tmpShape = new ARRAY_SIZE[1];
         tmpShape[0] = 1;
         auto *res = new Tensor<TYPE>(tmpArr, 1, tmpShape);
@@ -278,24 +278,29 @@ Tensor<TYPE>& Tensor<TYPE>::operator[](ARRAY_SIZE n) {
 
 template<typename TYPE>
 void Tensor<TYPE>::print() {
-    printNDimArray(mArray, mDimension, mShape, 0);
+    printNDimArray(std::cout, mArray, mDimension, mShape, 0);
     std::cout << std::endl;
 }
 
+template<typename TYPE>
+void Tensor<TYPE>::write(std::ostream &stream){
+    printNDimArray(stream, mArray, mDimension, mShape, 0);
+    stream << std::endl;
+}
 
 template<typename TYPE>
-void Tensor<TYPE>::printNDimArray(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_SIZE *shape,
-                                  ARRAY_SIZE dimLevel) {
+void Tensor<TYPE>::printNDimArray(std::ostream &stream, MemoryItem<TYPE> *array, ARRAY_SIZE dimension,
+                                  const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
     if (dimension == 1){
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
             std::cout << array[itr].value << ' ';
         }
-        std::cout << std::endl;
+        stream << std::endl;
     } else {
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
-            printNDimArray(array[itr].next, dimension-1, shape, dimLevel+1);
+            printNDimArray(stream, array[itr].next, dimension-1, shape, dimLevel+1);
             for (ARRAY_SIZE i = 0; i < dimension-2; i++){
-                std::cout << std::endl;
+                stream << std::endl;
             }
         }
     }
@@ -316,12 +321,12 @@ void Tensor<TYPE>::copyValues(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2
 }
 
 template <typename TYPE>
-Tensor<TYPE>& Tensor<TYPE>::operator[](cutting *cut) {
-    if (cut->start < cut->end && cut->step > 0){
-        ARRAY_SIZE amount = (cut->end - cut->start) / cut->step + 1;
+Tensor<TYPE>& Tensor<TYPE>::operator[](cutting *slice) {
+    if (slice->start < slice->end && slice->step > 0){
+        ARRAY_SIZE amount = (slice->end - slice->start) / slice->step + 1;
         auto *tmpArray = new MemoryItem<TYPE>[amount];
         ARRAY_SIZE tmpIndex = 0;
-        for (ARRAY_SIZE itr = cut->start; itr < mShape[0] && itr < cut->end && itr >= 0; itr += cut->step){
+        for (ARRAY_SIZE itr = slice->start; itr < mShape[0] && itr < slice->end && itr >= 0; itr += slice->step){
             tmpArray[tmpIndex] = mArray[itr];
             tmpIndex += 1;
         }
@@ -334,11 +339,11 @@ Tensor<TYPE>& Tensor<TYPE>::operator[](cutting *cut) {
         // create *res instead res because of deleting local variables
         auto *res = new Tensor<TYPE>(tmpArray, mDimension, resShape);
         return *res;
-    } else if (cut->end < cut->start && cut->step < 0){
-        ARRAY_SIZE amount = 1 + (cut->start - cut->end) / -cut->step;
+    } else if (slice->end < slice->start && slice->step < 0){
+        ARRAY_SIZE amount = 1 + (slice->start - slice->end) / -slice->step;
         auto *tmpArray = new MemoryItem<TYPE>[amount];
         ARRAY_SIZE j = 0;
-        for (ARRAY_SIZE itr = cut->start; itr > cut->end && itr >= 0 && itr < mShape[0]; itr += cut->step){
+        for (ARRAY_SIZE itr = slice->start; itr > slice->end && itr >= 0 && itr < mShape[0]; itr += slice->step){
             tmpArray[j] = mArray[itr];
             j++;
         }
