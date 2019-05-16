@@ -34,7 +34,7 @@ struct cutting{
     ARRAY_SIZE step = 1;
 };
 
-// ================================== TENSOR ===========================================================================
+// ========================================= TENSOR ====================================================================
 
 /*Numpy-like n-dimensional array*/
 
@@ -79,6 +79,11 @@ public:
      * of elements of tensor  (tensor[start:end:step] in python). */
     Tensor<TYPE> &operator[](cutting *slice);
 
+    Tensor<TYPE> &operator+(const Tensor<TYPE> &other);
+    Tensor<TYPE> &operator-(const Tensor<TYPE> &other);
+    Tensor<TYPE> &operator*(const Tensor<TYPE> &other);
+    Tensor<TYPE> &operator/(const Tensor<TYPE> &other);
+
     /* Create full copy of tensor */
     Tensor<TYPE> &copy();
 
@@ -87,6 +92,14 @@ public:
 
     /* Print tensor in the given output */
     void write(std::ostream &stream);
+
+    static TYPE sum(TYPE x, TYPE y){ return x + y; };
+
+    static TYPE sub(TYPE x, TYPE y){ return x - y; };
+
+    static TYPE mul(TYPE x, TYPE y){ return x - y; };
+
+    static TYPE div(TYPE x, TYPE y){ return x / y; };
 
 private:
 
@@ -187,6 +200,14 @@ private:
      * @param dimLevel: start index of elements from shape, that relate to given root */
     void copyValues(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2, ARRAY_SIZE dimension, const ARRAY_SIZE *shape,
                     ARRAY_SIZE dimLevel);
+
+
+    void doUnaryOperation(TYPE (*ptr2Func)(TYPE ), MemoryItem<TYPE> *array, MemoryItem<TYPE> *resArray,
+            ARRAY_SIZE dimensional, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel);
+
+    void doBinaryOperation(TYPE (*ptr2Func)(TYPE , TYPE ), MemoryItem<TYPE> *array1,
+            MemoryItem<TYPE> *array2, MemoryItem<TYPE> *resArray, ARRAY_SIZE dimensional, const ARRAY_SIZE *shape,
+            ARRAY_SIZE dimLevel);
 };
 
 
@@ -264,7 +285,7 @@ void Tensor<TYPE>::deleteNDimArray(MemoryItem<TYPE> *array, ARRAY_SIZE dimension
 }
 
 
-// ================================== TENSOR ===========================================================================
+// =========================================== TENSOR ==================================================================
 
 // constructor of an empty array
 template<typename TYPE>
@@ -505,7 +526,8 @@ void Tensor<TYPE>::copyValues(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2
 template <typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator[](cutting *slice) {
     if (slice->start < slice->end && slice->step > 0){
-        ARRAY_SIZE amount = (slice->end - slice->start) / slice->step + 1;
+        ARRAY_SIZE amount = (slice->end - slice->start) / slice->step;
+        if (slice->step != 1) amount++;
         auto *tmpArray = new MemoryItem<TYPE>[amount];
         ARRAY_SIZE tmpIndex = 0;
         for (ARRAY_SIZE itr = slice->start; itr < mShape[0] && itr < slice->end && itr >= 0; itr += slice->step){
@@ -522,7 +544,8 @@ Tensor<TYPE>& Tensor<TYPE>::operator[](cutting *slice) {
         auto *res = new Tensor<TYPE>(tmpArray, mDimension, resShape);
         return *res;
     } else if (slice->end < slice->start && slice->step < 0){
-        ARRAY_SIZE amount = 1 + (slice->start - slice->end) / -slice->step;
+        ARRAY_SIZE amount = (slice->start - slice->end) / -slice->step;
+        if (slice->step != -1) amount++;
         auto *tmpArray = new MemoryItem<TYPE>[amount];
         ARRAY_SIZE j = 0;
         for (ARRAY_SIZE itr = slice->start; itr > slice->end && itr >= 0 && itr < mShape[0]; itr += slice->step){
@@ -542,5 +565,87 @@ Tensor<TYPE>& Tensor<TYPE>::operator[](cutting *slice) {
         return res;
     }
 }
+
+template <typename TYPE>
+void Tensor<TYPE>::doUnaryOperation(TYPE (*ptr2Func)(TYPE ), MemoryItem<TYPE> *array, MemoryItem<TYPE> *resArray,
+                                     ARRAY_SIZE dimensional, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
+    if (dimensional == 1){
+        for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
+            resArray[itr].value = (*ptr2Func)(array[itr].value);
+        }
+    } else {
+        for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
+            doUnaryOperation(ptr2Func, array[itr].next, resArray[itr].next, dimensional-1, shape, dimLevel + 1);
+        }
+    }
+}
+
+
+template <typename TYPE>
+void Tensor<TYPE>::doBinaryOperation(TYPE (*ptr2Func)(TYPE , TYPE ), MemoryItem<TYPE> *array1,
+        MemoryItem<TYPE> *array2, MemoryItem<TYPE> *resArray, ARRAY_SIZE dimensional, const ARRAY_SIZE *shape,
+        ARRAY_SIZE dimLevel) {
+
+    if (dimensional == 1){
+        for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
+            resArray[itr].value = (*ptr2Func)(array1[itr].value, array2[itr].value);
+        }
+    } else {
+        for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
+            doBinaryOperation(ptr2Func, array1[itr].next, array2[itr].next, resArray[itr].next, dimensional-1,
+                    shape, dimLevel + 1);
+        }
+    }
+}
+
+
+static void checkSame(ARRAY_SIZE dim1, ARRAY_SIZE dim2, const ARRAY_SIZE *shape1, const ARRAY_SIZE *shape2){
+    if (dim1 != dim2)
+        throw std::invalid_argument("Can't find sum of tensors with different dimensions");
+
+    bool succ = true;
+    for (ARRAY_SIZE itr = 0; itr < dim1; ++itr)
+        if (shape1[itr] != shape2[itr]){
+            succ = false;
+            break;
+        }
+    if (!succ)
+        throw std::invalid_argument("Can't find sum of tensors with different shape");
+
+}
+
+template <typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator+(const Tensor<TYPE> &other) {
+    checkSame(this->mDimension, other.mDimension, this->mShape, other.mShape);
+    auto *result = new Tensor<TYPE>(mDimension, mShape);
+    doBinaryOperation(&Tensor<TYPE>::sum, this->mArray, other.mArray, result->mArray, this->mDimension, this->mShape, 0);
+    return *result;
+}
+
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator-(const Tensor<TYPE> &other) {
+    checkSame(this->mDimension, other.mDimension, this->mShape, other.mShape);
+    auto *result = new Tensor<TYPE>(mDimension, mShape);
+    doBinaryOperation(&Tensor<TYPE>::sub, this->mArray, other.mArray, result->mArray, this->mDimension, this->mShape, 0);
+    return *result;
+}
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator*(const Tensor<TYPE> &other) {
+    checkSame(this->mDimension, other.mDimension, this->mShape, other.mShape);
+    auto *result = new Tensor<TYPE>(mDimension, mShape);
+    doBinaryOperation(&Tensor<TYPE>::mul, this->mArray, other.mArray, result->mArray, this->mDimension, this->mShape, 0);
+    return *result;
+}
+
+template<typename TYPE>
+Tensor<TYPE>& Tensor<TYPE>::operator/(const Tensor<TYPE> &other) {
+    checkSame(this->mDimension, other.mDimension, this->mShape, other.mShape);
+    auto *result = new Tensor<TYPE>(mDimension, mShape);
+    doBinaryOperation(&Tensor<TYPE>::div, this->mArray, other.mArray, result->mArray, this->mDimension, this->mShape, 0);
+    return *result;
+}
+
 
 #endif //CPP_PROJECT_TENSOR_HXX

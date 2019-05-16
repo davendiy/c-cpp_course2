@@ -20,11 +20,13 @@ int main(){
     test.reshape(1, test_shape2);
     test.print();
     cutting cut1;
-    cut1.start = 0;
-    cut1.end = 3;
-    cut1.step = 2;
+    cut1.start = 3;
+    cut1.end = -1;
+    cut1.step = -1;
     test[&cut1].print();
 
+    auto sum = test + test[&cut1];
+    sum.print();
 
     test[0] = Tensor<int>(5);
     test[1] = Tensor<int>(6);
