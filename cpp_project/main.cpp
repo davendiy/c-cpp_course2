@@ -8,19 +8,19 @@ int main(){
     shape[0] = 3;
     shape[1] = 10;
     shape[2] = 10;
-    Tensor<int> test1(3, shape);
-    Tensor<int> test2(3, shape);
+    Tensor<float> test1(3, shape);
+    Tensor<float> test2(3, shape);
 
     test1 = test1 + 1;
     test1.print();
 
     int x = 0;
-    int y = 50;
+    int y = 300;
     for (int i = 0; i < shape[0]; i++){
         for (int j = 0; j < shape[1]; j++) {
             for (int k = 0; k < shape[2]; k++) {
-                test1[i][j][k] = Tensor<int>(x);
-                test2[i][j][k] = Tensor<int>(y);
+                test1[i][j][k] = Tensor<float>(x);
+                test2[i][j][k] = Tensor<float>(y);
                 x++;
                 y--;
             }
@@ -30,9 +30,15 @@ int main(){
     test1.print();
     test2.print();
 
-    auto sum = test1 + test2;
-    auto sub = test1 - test2;
+    auto tmp = test1 + test2;
+    tmp.print();
+    tmp = test1 - test2;
+    tmp.print();
+    tmp = test1 * test2;
+    tmp.print();
+    tmp = test1 / test2;
+    tmp.print();
 
-    sum.print();
-    sub.print();
+    tmp = test1 / 3;
+    tmp.print();
 }
