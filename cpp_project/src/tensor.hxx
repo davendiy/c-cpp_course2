@@ -91,6 +91,7 @@ public:
     Tensor<TYPE> &operator*(TYPE singleElement);
     Tensor<TYPE> &operator/(TYPE singleElement);
 
+    bool operator==(const Tensor<TYPE> &other);
     /* Create full copy of tensor */
     Tensor<TYPE> &copy();
 
@@ -103,7 +104,7 @@ public:
     /* static functions for standard arithmetic operations */
     static TYPE sum(TYPE x, TYPE y){ return x + y; };
     static TYPE sub(TYPE x, TYPE y){ return x - y; };
-    static TYPE mul(TYPE x, TYPE y){ return x - y; };
+    static TYPE mul(TYPE x, TYPE y){ return x * y; };
     static TYPE div(TYPE x, TYPE y){
         if (y == 0) throw std::invalid_argument("Divide by zero");
         return x / y;
@@ -234,6 +235,9 @@ private:
      * @param dimLevel: start index of elements from shape, that relate to given rootl */
     void doBinaryOperation(TYPE (*ptr2Func)(TYPE , TYPE ), MemoryItem<TYPE> *array1,
             MemoryItem<TYPE> *array2, MemoryItem<TYPE> *resArray, ARRAY_SIZE dimensional, const ARRAY_SIZE *shape,
+            ARRAY_SIZE dimLevel);
+
+    bool isEqual(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2, ARRAY_SIZE dimensional, const ARRAY_SIZE *shape,
             ARRAY_SIZE dimLevel);
 };
 
@@ -523,7 +527,7 @@ void Tensor<TYPE>::printNDimArray(std::ostream &stream, MemoryItem<TYPE> *array,
                                   const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
     if (dimension == 1){
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
-            std::cout << array[itr].value << ' ';
+            stream << array[itr].value << ' ';
         }
         stream << std::endl;
     } else {
@@ -712,5 +716,35 @@ Tensor<TYPE>& Tensor<TYPE>::operator/(TYPE singleElement) {
     return *result;
 }
 
+template <typename TYPE>
+bool Tensor<TYPE>::operator==(const Tensor<TYPE> &other) {
+    bool success = this->mDimension == other.mDimension;
+
+    if (!success) return false;
+
+    for (ARRAY_SIZE itr = 0; itr < mDimension; ++itr){
+        if (this->mShape[itr] != other.mShape[itr]){
+            return false;
+        }
+    }
+
+    success = isEqual(this->mArray, other.mArray, mDimension, mShape, 0);
+    return success;
+}
+
+
+template <typename TYPE>
+bool Tensor<TYPE>::isEqual(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2, ARRAY_SIZE dimensional,
+                           const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
+    if (dimensional == 1) return array1[0].value == array2[0].value;
+    else {
+        bool success = true;
+        for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
+            success &= isEqual(array1[itr].next, array2[itr].next, dimensional-1, shape, dimLevel+1);
+            if (!success) break;
+        }
+    return success;
+    }
+}
 
 #endif //CPP_PROJECT_TENSOR_HXX

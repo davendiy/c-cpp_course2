@@ -4,6 +4,8 @@ project(cpp_project C CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 add_executable(cpp_project main.cpp)
-add_library(tensor STATIC tensor.hxx)
+add_library(tensor STATIC src/tensor.hxx)
 set_target_properties(tensor PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(cpp_project tensor)
+
+add_executable(test ./src/test.cpp)

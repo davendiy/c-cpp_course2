@@ -1,4 +1,4 @@
-#include "tensor.hxx"
+#include "src/tensor.hxx"
 #include <cassert>
 
 
