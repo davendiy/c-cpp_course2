@@ -14,6 +14,7 @@ typedef int TEST_TYPE;
 
 
 int main(){
+    loggingEnable();
     std::fstream file("../src/test_output.txt", std::ios::out);
     bool flag = true;
     if (!file.is_open()){

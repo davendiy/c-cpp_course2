@@ -14,6 +14,8 @@ typedef int ARRAY_SIZE;
 typedef int INT;
 typedef float FLOAT;
 
+char LOGGING = '0';
+std::ofstream LOG_FILE("../logging.log", std::ios_base::out);
 
 // ====================================== N_DIM_ARRAY ==================================================================
 
@@ -33,6 +35,11 @@ struct cutting{
     ARRAY_SIZE end = 0;
     ARRAY_SIZE step = 1;
 };
+
+
+void loggingEnable() { LOGGING = '1';}
+
+void loggingDisable() { LOGGING = '0'; }
 
 // ========================================= TENSOR ====================================================================
 
@@ -65,6 +72,15 @@ public:
     /* destructor - delete recursively tree-like array*/
     ~Tensor();
 
+
+    ARRAY_SIZE dimension(){ return mDimension; };
+    ARRAY_SIZE *shape(){
+        auto res_shape = new ARRAY_SIZE[mDimension];
+        for (ARRAY_SIZE itr = 0; itr < mDimension; ++itr){
+            res_shape[itr] = mShape[itr];
+        }
+        return res_shape;
+    };
 
     /* Returns the sequence of all the elements from tensor */
     TYPE* chain();
@@ -247,6 +263,8 @@ private:
 // recursive function to create n dimensional array like tree
 template<typename TYPE>
 MemoryItem<TYPE>* Tensor<TYPE>::createNDimArray(ARRAY_SIZE dimension, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel){
+    if (LOGGING == '1')
+        LOG_FILE << "======createNDimArray (addition)=====(" << dimension << ' ' << dimLevel << ')' << std::endl;
     if (dimension < 1){
         return nullptr;
     } else {
@@ -268,6 +286,7 @@ MemoryItem<TYPE>* Tensor<TYPE>::createNDimArray(ARRAY_SIZE dimension, const ARRA
 // create n dimension array like tree
 template<typename TYPE>
 MemoryItem<TYPE>* Tensor<TYPE>::createNDimArray(ARRAY_SIZE dimension, const ARRAY_SIZE *shape){
+    if (LOGGING == '1') LOG_FILE << "======createNDimArray=====(" << dimension << ')' << std::endl;
     return createNDimArray(dimension, shape, 0);
 }
 
@@ -276,7 +295,7 @@ MemoryItem<TYPE>* Tensor<TYPE>::createNDimArray(ARRAY_SIZE dimension, const ARRA
 template <typename TYPE>
 void Tensor<TYPE>::deleteNDimArray(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_SIZE *shape,
         ARRAY_SIZE dimLevel){
-
+    if (LOGGING == '1') LOG_FILE << "======deleteNDimArray=====(" << dimension << ')' << std::endl;
     if (dimension > 1){
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
             deleteNDimArray(array[itr].next, dimension-1, shape, dimLevel+1);
@@ -291,6 +310,7 @@ void Tensor<TYPE>::deleteNDimArray(MemoryItem<TYPE> *array, ARRAY_SIZE dimension
 template <typename TYPE>
 MemoryItem<TYPE>* Tensor<TYPE>::copyNDimArray(MemoryItem<TYPE> *array,ARRAY_SIZE dimension, const ARRAY_SIZE *shape,
                                               ARRAY_SIZE dimLevel) {
+    if (LOGGING == '1') LOG_FILE << "======copyNDimArray=====(" << dimension << ')' << std::endl;
     if (dimension < 1){
         return nullptr;
     }
@@ -323,7 +343,9 @@ template<typename TYPE>
 Tensor<TYPE>::Tensor()
         :mShape(nullptr)
         ,mArray(nullptr)
-{}
+{
+    if (LOGGING == '1') LOG_FILE << "========create empty tensor=========" << std::endl;
+}
 
 // constructor from single element
 template<typename TYPE>
@@ -331,6 +353,7 @@ Tensor<TYPE>::Tensor(TYPE element)
         :mShape(nullptr)
         ,mArray(nullptr)
 {
+    if (LOGGING == '1') LOG_FILE << "========create tensor=========(" << element << ')' << std::endl;
     mShape = new ARRAY_SIZE[1];
     mShape[0] = 1;
     mArray = new MemoryItem<TYPE>[1];
@@ -345,6 +368,7 @@ Tensor<TYPE>::Tensor(ARRAY_SIZE dimension, const ARRAY_SIZE *shape)
         :mShape(nullptr)
         ,mArray(nullptr)
 {
+    if (LOGGING == '1') LOG_FILE << "========create tensor=========(dim: " << dimension << ')' << std::endl;
     mDimension = dimension;
     mShape = new ARRAY_SIZE[dimension];
     for (ARRAY_SIZE itr = 0; itr < dimension; ++itr){
@@ -360,6 +384,7 @@ Tensor<TYPE>::Tensor(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_
         :mShape(nullptr)
         ,mArray(nullptr)
 {
+    if (LOGGING == '1') LOG_FILE << "========create tensor from array=========()" << std::endl;
     mDimension = dimension;
     mShape = new ARRAY_SIZE[dimension];
     for (ARRAY_SIZE itr = 0; itr < dimension; ++itr){
@@ -371,6 +396,7 @@ Tensor<TYPE>::Tensor(MemoryItem<TYPE> *array, ARRAY_SIZE dimension, const ARRAY_
 // destructor
 template <typename TYPE>
 Tensor<TYPE>::~Tensor() {
+    if (LOGGING == '1') LOG_FILE << "========delete tensor=========(dim:" << mDimension << ')' << std::endl;
     deleteNDimArray(mArray, mDimension, mShape);
     delete[] mShape;
     mDimension = 0;
@@ -380,6 +406,7 @@ Tensor<TYPE>::~Tensor() {
 // recursively fill the chain array
 template<typename TYPE>
 void Tensor<TYPE>::createChain(MemoryItem<TYPE> *array, ARRAY_SIZE dimLevel, TYPE *resArray, ARRAY_SIZE &startIndex) {
+    if (LOGGING == '1') LOG_FILE << "========create chain of tensor=========(" << dimLevel << ')' << std::endl;
     if (mDimension - dimLevel < 1){
         return;
     } else if (mDimension - dimLevel == 1){
@@ -398,6 +425,7 @@ void Tensor<TYPE>::createChain(MemoryItem<TYPE> *array, ARRAY_SIZE dimLevel, TYP
 // build a chain of all the elements of Array
 template<typename TYPE>
 TYPE* Tensor<TYPE>::chain() {
+    if (LOGGING == '1') LOG_FILE << "========chain of tensor=========(" << mDimension << ')' << std::endl;
     ARRAY_SIZE amount = 1;
     for (ARRAY_SIZE itr = 0; itr < mDimension; ++itr){
         amount *= mShape[itr];
@@ -417,6 +445,7 @@ TYPE* Tensor<TYPE>::chain() {
 template <typename TYPE>
 void Tensor<TYPE>::fillArrayFromChain(MemoryItem<TYPE> *array, ARRAY_SIZE dimLevel, TYPE *_chain,
                                       ARRAY_SIZE &startIndex) {
+    if (LOGGING == '1') LOG_FILE << "========create tensor from chain=========(" << dimLevel << ')' << std::endl;
     if (mDimension - dimLevel < 1){
         return;
     } else if (mDimension - dimLevel == 1){
@@ -437,6 +466,8 @@ void Tensor<TYPE>::fillArrayFromChain(MemoryItem<TYPE> *array, ARRAY_SIZE dimLev
 // reshape array to new measurements
 template<typename TYPE>
 void Tensor<TYPE>::reshape(ARRAY_SIZE new_dimension, const ARRAY_SIZE *new_shape) {
+    if (LOGGING == '1')
+        LOG_FILE << "========reshape=========(from:" << mDimension << " to:" << new_dimension << ')' << std::endl;
     ARRAY_SIZE amount1 = 1;
     ARRAY_SIZE amount2 = 1;
 
@@ -466,6 +497,7 @@ void Tensor<TYPE>::reshape(ARRAY_SIZE new_dimension, const ARRAY_SIZE *new_shape
 // full copy of tensor
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::copy() {
+    if (LOGGING == '1') LOG_FILE << "========copy tensor=========(" << ')' << std::endl;
     auto *res = new Tensor<TYPE>(mDimension, mShape);
     res->mArray = copyNDimArray(mArray, mDimension, mShape, 0);
     return *res;
@@ -474,6 +506,7 @@ Tensor<TYPE>& Tensor<TYPE>::copy() {
 // x1 = x2 copying all the values from x2 to x1
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator=(const Tensor<TYPE> &other) {
+    if (LOGGING == '1') LOG_FILE << "========operator = =========(" << ')' << std::endl;
     if (this != &other){
         if (this->mDimension != other.mDimension) throw std::invalid_argument("different dimensions");
         bool success = true;
@@ -492,6 +525,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator=(const Tensor<TYPE> &other) {
 // returns n-1 dimensional element of tensor (even if this element just simple value)
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator[](ARRAY_SIZE i) {
+    if (LOGGING == '1') LOG_FILE << "========operator[] =========(" << i << ')' << std::endl;
     if (i > mShape[0] || i < 0){
         throw std::out_of_range("index is out of range");
     } else if (mDimension > 1){
@@ -512,12 +546,14 @@ Tensor<TYPE>& Tensor<TYPE>::operator[](ARRAY_SIZE i) {
 
 template<typename TYPE>
 void Tensor<TYPE>::print() {
+    if (LOGGING == '1') LOG_FILE << "========print tensor=========(" << ')' << std::endl;
     printNDimArray(std::cout, mArray, mDimension, mShape, 0);
     std::cout << std::endl;
 }
 
 template<typename TYPE>
 void Tensor<TYPE>::write(std::ostream &stream){
+    if (LOGGING == '1') LOG_FILE << "========write tensor to file =========(" << ')' << std::endl;
     printNDimArray(stream, mArray, mDimension, mShape, 0);
     stream << std::endl;
 }
@@ -525,6 +561,7 @@ void Tensor<TYPE>::write(std::ostream &stream){
 template<typename TYPE>
 void Tensor<TYPE>::printNDimArray(std::ostream &stream, MemoryItem<TYPE> *array, ARRAY_SIZE dimension,
                                   const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
+    if (LOGGING == '1') LOG_FILE << "========print array =========(dim:" << dimension << ')' << std::endl;
     if (dimension == 1){
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
             stream << array[itr].value << ' ';
@@ -543,6 +580,7 @@ void Tensor<TYPE>::printNDimArray(std::ostream &stream, MemoryItem<TYPE> *array,
 template <typename TYPE>
 void Tensor<TYPE>::copyValues(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2, ARRAY_SIZE dimension,
                               const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
+    if (LOGGING == '1') LOG_FILE << "========copy values of array=========(" << ')' << std::endl;
     if (dimension == 1){
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
             array1[itr].value = array2[itr].value;
@@ -556,6 +594,10 @@ void Tensor<TYPE>::copyValues(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2
 
 template <typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator[](cutting *slice) {
+    if (LOGGING == '1'){
+        LOG_FILE << "========operator [] for slice =========(" <<slice->start << ':' << slice->end;
+        LOG_FILE << ':' << slice->step << ')' << std::endl;
+    }
     if (slice->start < slice->end && slice->step > 0){
         ARRAY_SIZE amount = (slice->end - slice->start) / slice->step;
         if (slice->step != 1) amount++;
@@ -601,6 +643,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator[](cutting *slice) {
 template <typename TYPE>
 void Tensor<TYPE>::doUnaryOperation(TYPE (*ptr2Func)(TYPE ,TYPE ), MemoryItem<TYPE> *array, TYPE singleElement,
         MemoryItem<TYPE> *resArray, ARRAY_SIZE dimension, const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
+    if (LOGGING == '1') LOG_FILE << "========doUnaryOperation=========(" << ')' << std::endl;
     if (dimension == 1){
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
             resArray[itr].value = (*ptr2Func)(array[itr].value, singleElement);
@@ -619,6 +662,7 @@ void Tensor<TYPE>::doBinaryOperation(TYPE (*ptr2Func)(TYPE , TYPE ), MemoryItem<
         MemoryItem<TYPE> *array2, MemoryItem<TYPE> *resArray, ARRAY_SIZE dimensional, const ARRAY_SIZE *shape,
         ARRAY_SIZE dimLevel) {
 
+    if (LOGGING == '1') LOG_FILE << "========doBinaryOperation=========(" << ')' << std::endl;
     if (dimensional == 1){
         for (ARRAY_SIZE itr = 0; itr < shape[dimLevel]; ++itr){
             resArray[itr].value = (*ptr2Func)(array1[itr].value, array2[itr].value);
@@ -635,7 +679,7 @@ void Tensor<TYPE>::doBinaryOperation(TYPE (*ptr2Func)(TYPE , TYPE ), MemoryItem<
 static void checkSame(ARRAY_SIZE dim1, ARRAY_SIZE dim2, const ARRAY_SIZE *shape1, const ARRAY_SIZE *shape2){
     if (dim1 != dim2)
         throw std::invalid_argument("Can't find sum of tensors with different dimensions");
-
+    if (LOGGING == '1') LOG_FILE << "=========check sames of arrays =========(" << ')' << std::endl;
     bool succ = true;
     for (ARRAY_SIZE itr = 0; itr < dim1; ++itr)
         if (shape1[itr] != shape2[itr]){
@@ -649,6 +693,7 @@ static void checkSame(ARRAY_SIZE dim1, ARRAY_SIZE dim2, const ARRAY_SIZE *shape1
 
 template <typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator+(const Tensor<TYPE> &other) {
+    if (LOGGING == '1') LOG_FILE << "========operator + for other =========(" << ')' << std::endl;
     checkSame(this->mDimension, other.mDimension, this->mShape, other.mShape);
     auto *result = new Tensor<TYPE>(mDimension, mShape);
     doBinaryOperation(&Tensor<TYPE>::sum, this->mArray, other.mArray, result->mArray, this->mDimension, this->mShape, 0);
@@ -658,6 +703,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator+(const Tensor<TYPE> &other) {
 
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator-(const Tensor<TYPE> &other) {
+    if (LOGGING == '1') LOG_FILE << "========operator - for other =========(" << ')' << std::endl;
     checkSame(this->mDimension, other.mDimension, this->mShape, other.mShape);
     auto *result = new Tensor<TYPE>(mDimension, mShape);
     doBinaryOperation(&Tensor<TYPE>::sub, this->mArray, other.mArray, result->mArray, this->mDimension, this->mShape, 0);
@@ -666,6 +712,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator-(const Tensor<TYPE> &other) {
 
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator*(const Tensor<TYPE> &other) {
+    if (LOGGING == '1') LOG_FILE << "========operator * for other =========(" << ')' << std::endl;
     checkSame(this->mDimension, other.mDimension, this->mShape, other.mShape);
     auto *result = new Tensor<TYPE>(mDimension, mShape);
     doBinaryOperation(&Tensor<TYPE>::mul, this->mArray, other.mArray, result->mArray, this->mDimension, this->mShape, 0);
@@ -674,6 +721,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator*(const Tensor<TYPE> &other) {
 
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator/(const Tensor<TYPE> &other) {
+    if (LOGGING == '1') LOG_FILE << "========operator / for other =========(" << ')' << std::endl;
     checkSame(this->mDimension, other.mDimension, this->mShape, other.mShape);
     auto *result = new Tensor<TYPE>(mDimension, mShape);
     doBinaryOperation(&Tensor<TYPE>::div, this->mArray, other.mArray, result->mArray, this->mDimension, this->mShape, 0);
@@ -683,6 +731,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator/(const Tensor<TYPE> &other) {
 
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator+(TYPE singleElement) {
+    if (LOGGING == '1') LOG_FILE << "========operator + for single element =========(" << ')' << std::endl;
     auto *result = new Tensor<TYPE>(mDimension, mShape);
 
     doUnaryOperation(Tensor<TYPE>::sum, this->mArray, singleElement, result->mArray, this->mDimension, this->mShape, 0);
@@ -692,6 +741,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator+(TYPE singleElement) {
 
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator-(TYPE singleElement) {
+    if (LOGGING == '1') LOG_FILE << "========operator - for single element =========(" << ')' << std::endl;
     auto *result = new Tensor<TYPE>(mDimension, mShape);
 
     doUnaryOperation(Tensor<TYPE>::sub, this->mArray, singleElement, result->mArray, this->mDimension, this->mShape, 0);
@@ -701,6 +751,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator-(TYPE singleElement) {
 
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator*(TYPE singleElement) {
+    if (LOGGING == '1') LOG_FILE << "========operator * for single element =========(" << ')' << std::endl;
     auto *result = new Tensor<TYPE>(mDimension, mShape);
 
     doUnaryOperation(Tensor<TYPE>::mul, this->mArray, singleElement, result->mArray, this->mDimension, this->mShape, 0);
@@ -710,6 +761,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator*(TYPE singleElement) {
 
 template<typename TYPE>
 Tensor<TYPE>& Tensor<TYPE>::operator/(TYPE singleElement) {
+    if (LOGGING == '1') LOG_FILE << "========operator / for single element =========(" << ')' << std::endl;
     auto *result = new Tensor<TYPE>(mDimension, mShape);
 
     doUnaryOperation(Tensor<TYPE>::div, this->mArray, singleElement, result->mArray, this->mDimension, this->mShape, 0);
@@ -718,6 +770,7 @@ Tensor<TYPE>& Tensor<TYPE>::operator/(TYPE singleElement) {
 
 template <typename TYPE>
 bool Tensor<TYPE>::operator==(const Tensor<TYPE> &other) {
+    if (LOGGING == '1') LOG_FILE << "========operator ==  =========(" << ')' << std::endl;
     bool success = this->mDimension == other.mDimension;
 
     if (!success) return false;
@@ -736,6 +789,7 @@ bool Tensor<TYPE>::operator==(const Tensor<TYPE> &other) {
 template <typename TYPE>
 bool Tensor<TYPE>::isEqual(MemoryItem<TYPE> *array1, MemoryItem<TYPE> *array2, ARRAY_SIZE dimensional,
                            const ARRAY_SIZE *shape, ARRAY_SIZE dimLevel) {
+    if (LOGGING == '1') LOG_FILE << "========are arrays equal=========(" << ')' << std::endl;
     if (dimensional == 1) return array1[0].value == array2[0].value;
     else {
         bool success = true;
