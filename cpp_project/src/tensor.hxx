@@ -4,6 +4,9 @@
 // email: davendiy@gmail.com
 //
 
+/* UML diagram: just one class-template Tensor.*/
+
+
 #ifndef CPP_PROJECT_TENSOR_HXX
 #define CPP_PROJECT_TENSOR_HXX
 
@@ -15,7 +18,7 @@ typedef int INT;
 typedef float FLOAT;
 
 char LOGGING = '0';
-std::ofstream LOG_FILE("../logging.log", std::ios_base::out);
+std::ofstream LOG_FILE("../logging.log", std::ios::out | std::ios::in);
 
 // ====================================== N_DIM_ARRAY ==================================================================
 
@@ -37,6 +40,7 @@ struct cutting{
 };
 
 
+// ENABLE / DISABLE logging
 void loggingEnable() { LOGGING = '1';}
 
 void loggingDisable() { LOGGING = '0'; }

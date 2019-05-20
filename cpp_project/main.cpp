@@ -120,6 +120,7 @@ int main() {
     auto testTensor1 = *testTensor1_p;
     auto testTensor2 = *testTensor2_p;
 
+    // user's control
     while (true){
         int workMod;
         cout << "Please, enter what do you want to do with tensors:" << endl;
