@@ -72,9 +72,6 @@ typedef struct DLine_
 } DLine;
 
 
-// real function R^1 -> R^1
-typedef (*DType)(Dtype) R1R_Finc;
-
 
 void* memzero(void* ptr, size_t n)
 {
