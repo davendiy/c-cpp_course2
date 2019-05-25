@@ -4,7 +4,6 @@
 // email: davendiy@gmail.com
 //
 
-// TODO add input in other number systems
 // TODO add input like table of coefficients
 // TODO write the tests and user interface
 // TODO refactor, comments etc.
@@ -18,6 +17,17 @@ BigInteger *read(){
     SIZE size = 0;
     while ((number[size] != '\n' && number[size] != ' ') && size < 1000) size++;
     BigInteger *res = fromChars(number, size);
+    free(number);
+    return res;
+}
+
+
+BigInteger *readAny(int base){
+    char *number = (char *) malloc(sizeof(char) * 1000);
+    fgets(number, 1000, stdin);
+    SIZE size = 0;
+    while ((number[size] != '\n' && number[size] != ' ') && size < 1000) size++;
+    BigInteger *res = fromOtherChars(number, size, base);
     free(number);
     return res;
 }
@@ -65,5 +75,13 @@ int main() {
 
     printf("lcm(a, b):\n");
     print(lcm(num1, num2));
+
+    printf("please, enter the number in binary system:\n");
+    BigInteger *num3 = readAny(2);
+    print(num3);
+
+    printf("please, enter the number in hexadecimal system:\n");
+    BigInteger *num4 = readAny(16);
+    print(num4);
     return 0;
 }

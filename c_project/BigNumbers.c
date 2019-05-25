@@ -6,6 +6,9 @@
 
 #include "BigNumbers.h"
 
+const char GLOBAL_NUMBERS[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+
 long int binPow(long int a, long int n) {
     long int res = 1;
     while (n) {
@@ -13,6 +16,18 @@ long int binPow(long int a, long int n) {
             res *= a;
         a *= a;
         n >>= 1;
+    }
+    return res;
+}
+
+
+int convert2int(char numb) {
+    int res = -1;
+    for (int itr = 0; itr < 36; ++itr){
+        if (GLOBAL_NUMBERS[itr] == numb){
+            res = itr;
+            break;
+        }
     }
     return res;
 }
@@ -50,6 +65,55 @@ BigInteger *fromChars(const char *number, SIZE size) {
         ++itr;
         ++elemIndex;
     }
+    return res;
+}
+
+
+BigInteger *fromOtherChars(const char *number, SIZE size, int base) {
+    BigInteger *res = fromInt(0);
+    int start = 0;
+    if (number[start] == '-'){
+        res->sign = -1;
+        start = 1;
+    }
+    if (base > 36 || base < 2){
+        exit(1);
+    }
+    BigInteger *tmpAdd;
+    BigInteger *tmpRes;
+    BigInteger *tmpMul;
+    BigInteger *multiplier = fromInt(1);
+    BigInteger *bigBase = fromInt(base);
+    int tmp_num;
+    for (SIZE itr = size-1; itr >= start; --itr){
+        tmp_num = convert2int(number[itr]);
+        if (tmp_num == -1 || tmp_num >= base){
+            exit(1);
+        }
+
+        tmpMul = fromInt(tmp_num);
+        tmpAdd = mul(tmpMul, multiplier);
+        tmpRes = add(res, tmpAdd);
+
+        free(res->body);
+        free(res);
+        free(tmpAdd->body);
+        free(tmpAdd);
+        free(tmpMul->body);
+        free(tmpMul);
+
+        res = tmpRes;
+
+        tmpMul = mul(multiplier, bigBase);
+        free(multiplier->body);
+        free(multiplier);
+        multiplier = tmpMul;
+        if (itr == 0) break;
+    }
+    free(multiplier->body);
+    free(multiplier);
+    free(bigBase->body);
+    free(bigBase);
     return res;
 }
 
@@ -125,16 +189,6 @@ BigInteger *_sub(const BigInteger *a, const BigInteger *b) {
     return res;
 }
 
-
-ELEM_TYPE *growUp(ELEM_TYPE *array, SIZE size) {
-    ELEM_TYPE *res = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE) * (size + 1));
-    for (SIZE i = 0; i < size; ++i){
-        res[i] = array[i];
-    }
-    res[size] = 0;
-    free(array);
-    return res;
-}
 
 
 void normalize(BigInteger *n) {
@@ -382,7 +436,7 @@ BigInteger *divide(const BigInteger *X, const BigInteger *Y) {
     res->intsAmount = X->intsAmount;
     res->body = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE) * res->intsAmount);
 
-    BigInteger *cur = fromChars("0", 1);
+    BigInteger *cur = fromInt(0);
     for (SIZE i = X->intsAmount-1; i >= 0; --i){
         shiftRight(cur);
         cur->body[0] = X->body[i];
@@ -454,8 +508,8 @@ BigInteger **xgcd(const BigInteger *a, const BigInteger *b) {
 
     if (tmp_b->intsAmount == 1 && tmp_b->body[0] == 0){
 
-        resArray[0] = fromChars("1", 1);
-        resArray[1] = fromChars("0", 1);
+        resArray[0] = fromInt(1);
+        resArray[1] = fromInt(0);
         resArray[2] = copy(tmp_a);
 
     } else {
@@ -522,5 +576,23 @@ BigInteger *lcm(const BigInteger *a, const BigInteger *b) {
     free(tmp);
     free(_gcd->body);
     free(_gcd);
+    return res;
+}
+
+BigInteger *fromInt(ELEM_TYPE num) {
+    ELEM_TYPE base = binPow(10, ELEM_SIZE_NUM);
+    ELEM_TYPE abs_num = num < 0 ? -num : num;
+    BigInteger *res = (BigInteger*) malloc(sizeof(BigInteger));
+    res->sign = num < 0 ? -1 : 1;
+    if (abs_num < base){
+        res->body = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE));
+        res->body[0] = num;
+        res->intsAmount = 1;
+    } else {
+        res->body = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE) * 2);
+        res->body[0] = abs_num % base;
+        res->body[1] = abs_num / base;
+        res->intsAmount = 2;
+    }
     return res;
 }

@@ -28,11 +28,17 @@ typedef struct BigInteger{
 } BigInteger;
 
 
+int convert2int(char numb);
+
 long int binPow(long int a, long int n);
 
 BigInteger *copy(const BigInteger *a);
 
+
 BigInteger *fromChars(const char *number, SIZE size);
+
+
+BigInteger *fromInt(ELEM_TYPE num);
 
 
 void print(const BigInteger *a);
@@ -54,9 +60,6 @@ BigInteger *_sub(const BigInteger *a, const BigInteger *b);
 BigInteger *add(const BigInteger *a, const BigInteger *b);
 
 BigInteger *sub(const BigInteger *a, const BigInteger *b);
-
-
-ELEM_TYPE *growUp(ELEM_TYPE *array, SIZE size);
 
 
 void normalize(BigInteger *n);
@@ -83,5 +86,8 @@ BigInteger **xgcd(const BigInteger *a, const BigInteger *b);
 BigInteger *gcd(const BigInteger *a, const BigInteger *b);
 
 BigInteger *lcm(const BigInteger *a, const BigInteger *b);
+
+
+BigInteger *fromOtherChars(const char *number, SIZE size, int base);
 
 #endif //C_PROJECT_BIGNUMBERS_H
