@@ -4,24 +4,20 @@
 // email: davendiy@gmail.com
 //
 
-// TODO add the subtraction and improve addition to work with negative numbers
-// TODO add the multiplication
-// TODO add the division
-// TODO add the gcd and lcm for big numbers
-// TODO add the changing to other number system
-// TODO add the reading number in binary and hexadecimal system
+// TODO add input in other number systems
+// TODO add input like table of coefficients
 // TODO write the tests and user interface
 // TODO refactor, comments etc.
 
 #include <stdio.h>
 #include "BigNumbers.h"
 
-BigNumber *read(){
+BigInteger *read(){
     char *number = (char *) malloc(sizeof(char) * 1000);
     fgets(number, 1000, stdin);
     SIZE size = 0;
     while ((number[size] != '\n' && number[size] != ' ') && size < 1000) size++;
-    BigNumber *res = fromChars(number, size);
+    BigInteger *res = fromChars(number, size);
     free(number);
     return res;
 }
@@ -30,41 +26,44 @@ BigNumber *read(){
 int main() {
 
 
-//    printf("%ld", binPow(10, 10));
-//
-//
-//    int size;
-//    scanf("%d", &size);
-//    char *number = (char *) malloc(sizeof(char)*size);
-//    scanf("\n");
-//    for (int itr=0; itr < size; ++itr){
-//        scanf("%c", &number[itr]);
-//    }
-//    scanf("\n");
-//    BigNumber *num1 = fromChars(number, size);
-//    free(number);
-//
-//    scanf("%d", &size);
-//    number = (char *) malloc(sizeof(char)*size);
-//    scanf("\n");
-//    scanf("%[^\n]s", number);
-//
-//    BigNumber *num2 = fromChars(number, size);
+    BigInteger *num1 = read();
+    BigInteger *num2 = read();
 
-    BigNumber *num1 = read();
-    BigNumber *num2 = read();
-
-    BigNumber *res_add = add(num1, num2);
+    BigInteger *res_add = add(num1, num2);
 
     print(num1);
     print(num2);
+    printf("addition:\n");
     print(res_add);
 
-    BigNumber *res_sub = sub(num1, num2);
+    BigInteger *res_sub = sub(num1, num2);
+    printf("subtraction:\n");
     print(res_sub);
 
-    BigNumber *res_mul = mul(num1, num2);
+    BigInteger *res_mul = mul(num1, num2);
+    printf("multiplication:\n");
     print(res_mul);
 
+    BigInteger *res_div = divide(num1, num2);
+    printf("division:\n");
+    print(res_div);
+
+    BigInteger *tmp = mul(res_div, num2);
+    BigInteger *remainder = sub(num1, tmp);
+    printf("remainder:\n");
+    print(remainder);
+
+    BigInteger **res_xgcd = xgcd(num1, num2);
+    printf("gcd(a, b) = xa + yb\n");
+
+    printf("gcd(a, b):\n");
+    print(gcd(num1, num2));
+    printf("x:\n");
+    print(res_xgcd[0]);
+    printf("y\n");
+    print(res_xgcd[1]);
+
+    printf("lcm(a, b):\n");
+    print(lcm(num1, num2));
     return 0;
 }

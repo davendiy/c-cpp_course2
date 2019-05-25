@@ -21,55 +21,67 @@ typedef long int ELEM_TYPE;
 #define MIN(a, b)       a < b ? a : b
 
 
-typedef struct BigNumber{
+typedef struct BigInteger{
     size_t intsAmount;
     int sign;
     ELEM_TYPE *body;
-} BigNumber;
+} BigInteger;
 
 
 long int binPow(long int a, long int n);
 
-BigNumber *copy(const BigNumber *a);
+BigInteger *copy(const BigInteger *a);
 
-BigNumber *fromChars(const char *number, SIZE size);
-
-
-void print(const BigNumber *a);
+BigInteger *fromChars(const char *number, SIZE size);
 
 
-void delRedundantZeros(BigNumber *a);
-
-int _absRelation(const BigNumber *a, const BigNumber *b, SIZE last_index);
-
-int absRelation(BigNumber *a, BigNumber *b);
+void print(const BigInteger *a);
 
 
-BigNumber *_add(const BigNumber *a, const BigNumber *b);
+void delRedundantZeros(BigInteger *a);
+
+int _absRelation(const BigInteger *a, const BigInteger *b, SIZE last_index);
+
+int absRelation(BigInteger *a, BigInteger *b);
+
+
+BigInteger *_add(const BigInteger *a, const BigInteger *b);
 
 // subtraction (a >= b)
-BigNumber *_sub(const BigNumber *a, const BigNumber *b);
+BigInteger *_sub(const BigInteger *a, const BigInteger *b);
 
 
-BigNumber *add(const BigNumber *a, const BigNumber *b);
+BigInteger *add(const BigInteger *a, const BigInteger *b);
 
-BigNumber *sub(const BigNumber *a, const BigNumber *b);
+BigInteger *sub(const BigInteger *a, const BigInteger *b);
 
 
 ELEM_TYPE *growUp(ELEM_TYPE *array, SIZE size);
 
 
-void normalize(BigNumber *n);
+void normalize(BigInteger *n);
 
 
-void extendBigNumber(BigNumber *x, SIZE n);
+void extendBigInteger(BigInteger *x, SIZE n);
 
 
 
-BigNumber *karatsuba_mul(BigNumber *X, BigNumber *Y);;
+BigInteger *karatsuba_mul(BigInteger *X, BigInteger *Y);;
 
 
-BigNumber *mul(const BigNumber *X, const BigNumber *Y);
+BigInteger *mul(const BigInteger *X, const BigInteger *Y);
 
+
+void shiftRight(BigInteger *number);
+
+
+BigInteger *divide(const BigInteger *X, const BigInteger *Y);
+
+
+BigInteger **xgcd(const BigInteger *a, const BigInteger *b);
+
+BigInteger *gcd(const BigInteger *a, const BigInteger *b);
+
+BigInteger *lcm(const BigInteger *a, const BigInteger *b);
 
 #endif //C_PROJECT_BIGNUMBERS_H

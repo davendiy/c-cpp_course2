@@ -18,8 +18,8 @@ long int binPow(long int a, long int n) {
 }
 
 
-BigNumber *fromChars(const char *number, SIZE size) {
-    BigNumber *res = (BigNumber *) malloc(sizeof(BigNumber));
+BigInteger *fromChars(const char *number, SIZE size) {
+    BigInteger *res = (BigInteger *) malloc(sizeof(BigInteger));
     int start = 0;
     if (number[0] == '-') {
         res->sign = -1;
@@ -54,7 +54,7 @@ BigNumber *fromChars(const char *number, SIZE size) {
 }
 
 
-void print(const BigNumber *a) {
+void print(const BigInteger *a) {
     if (a->sign == -1){
         printf("-");
     }
@@ -69,7 +69,7 @@ void print(const BigNumber *a) {
 }
 
 
-void delRedundantZeros(BigNumber *a) {
+void delRedundantZeros(BigInteger *a) {
     while (a->body[a->intsAmount-1] == 0 && a->intsAmount > 1) a->intsAmount--;
     ELEM_TYPE *res = (ELEM_TYPE * ) malloc(sizeof(ELEM_TYPE) * a->intsAmount);
     for (SIZE itr = 0; itr < a->intsAmount; itr++) {
@@ -80,11 +80,11 @@ void delRedundantZeros(BigNumber *a) {
 }
 
 
-BigNumber *_add(const BigNumber *a, const BigNumber *b) {
+BigInteger *_add(const BigInteger *a, const BigInteger *b) {
 
     int carry = 0;
     int base = binPow(10, ELEM_SIZE_NUM);
-    BigNumber *res = (BigNumber *) malloc(sizeof(BigNumber));
+    BigInteger *res = (BigInteger *) malloc(sizeof(BigInteger));
     res->sign = 1;
     res->intsAmount = (MAX(a->intsAmount, b->intsAmount)) + 1;
     res->body = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE) * res->intsAmount);
@@ -101,11 +101,11 @@ BigNumber *_add(const BigNumber *a, const BigNumber *b) {
 }
 
 
-BigNumber *_sub(const BigNumber *a, const BigNumber *b) {
+BigInteger *_sub(const BigInteger *a, const BigInteger *b) {
 
     int carry = 0;
     int base = binPow(10, ELEM_SIZE_NUM);
-    struct BigNumber *res = (BigNumber *) malloc(sizeof(BigNumber));
+    struct BigInteger *res = (BigInteger *) malloc(sizeof(BigInteger));
     res->sign = 1;
     res->intsAmount = MAX(a->intsAmount, b->intsAmount);
     res->body = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE) * res->intsAmount);
@@ -137,7 +137,7 @@ ELEM_TYPE *growUp(ELEM_TYPE *array, SIZE size) {
 }
 
 
-void normalize(BigNumber *n) {
+void normalize(BigInteger *n) {
 
     ELEM_TYPE base = binPow(10, ELEM_SIZE_NUM);
     for (SIZE i = 0; i < n->intsAmount; ++i){
@@ -149,7 +149,7 @@ void normalize(BigNumber *n) {
 }
 
 
-void extendBigNumber(BigNumber *x, SIZE n) {
+void extendBigInteger(BigInteger *x, SIZE n) {
     if (n & 1){
         n++;
     }
@@ -169,14 +169,14 @@ void extendBigNumber(BigNumber *x, SIZE n) {
 }
 
 
-BigNumber *karatsuba_mul(BigNumber *X, BigNumber *Y) {
+BigInteger *karatsuba_mul(BigInteger *X, BigInteger *Y) {
     SIZE n = MAX(X->intsAmount, Y->intsAmount);
     if (n > 1){
-        extendBigNumber(X, n);
-        extendBigNumber(Y, n);
+        extendBigInteger(X, n);
+        extendBigInteger(Y, n);
     }
 
-    BigNumber *res = (BigNumber *) malloc(sizeof(BigNumber));
+    BigInteger *res = (BigInteger *) malloc(sizeof(BigInteger));
     res->sign = 1;
     res->intsAmount = X->intsAmount * 2;
     res->body = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE) * res->intsAmount);
@@ -190,10 +190,10 @@ BigNumber *karatsuba_mul(BigNumber *X, BigNumber *Y) {
     }
 
     SIZE k = X->intsAmount / 2;
-    BigNumber *Xr = (BigNumber *) malloc(sizeof(BigNumber));
-    BigNumber *Xl = (BigNumber *) malloc(sizeof(BigNumber));
-    BigNumber *Yr = (BigNumber *) malloc(sizeof(BigNumber));
-    BigNumber *Yl = (BigNumber *) malloc(sizeof(BigNumber));
+    BigInteger *Xr = (BigInteger *) malloc(sizeof(BigInteger));
+    BigInteger *Xl = (BigInteger *) malloc(sizeof(BigInteger));
+    BigInteger *Yr = (BigInteger *) malloc(sizeof(BigInteger));
+    BigInteger *Yl = (BigInteger *) malloc(sizeof(BigInteger));
 
     Xr->intsAmount = Yr->intsAmount = k;
     Xl->intsAmount = Yl->intsAmount = X->intsAmount - k;
@@ -211,11 +211,11 @@ BigNumber *karatsuba_mul(BigNumber *X, BigNumber *Y) {
         }
     }
 
-    BigNumber *P1 = karatsuba_mul(Xl, Yl);
-    BigNumber *P2 = karatsuba_mul(Xr, Yr);
+    BigInteger *P1 = karatsuba_mul(Xl, Yl);
+    BigInteger *P2 = karatsuba_mul(Xr, Yr);
 
-    BigNumber *Xlr = (BigNumber *) malloc(sizeof(BigNumber));
-    BigNumber *Ylr = (BigNumber *) malloc(sizeof(BigNumber));
+    BigInteger *Xlr = (BigInteger *) malloc(sizeof(BigInteger));
+    BigInteger *Ylr = (BigInteger *) malloc(sizeof(BigInteger));
 
     Xlr->intsAmount = Ylr->intsAmount = Xr->intsAmount;
     Xlr->body = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE) * Xlr->intsAmount);
@@ -225,7 +225,7 @@ BigNumber *karatsuba_mul(BigNumber *X, BigNumber *Y) {
         Ylr->body[itr] = Yl->body[itr] + Yr->body[itr];
     }
 
-    BigNumber *P3 = karatsuba_mul(Xlr, Ylr);
+    BigInteger *P3 = karatsuba_mul(Xlr, Ylr);
     for (SIZE itr = 0; itr < X->intsAmount; ++itr){
         P3->body[itr] -= P2->body[itr] + P1->body[itr];
         res->body[itr] = P2->body[itr];
@@ -262,20 +262,25 @@ BigNumber *karatsuba_mul(BigNumber *X, BigNumber *Y) {
 }
 
 
-BigNumber *mul(const BigNumber *X, const BigNumber *Y) {
-    BigNumber *tmp_X = copy(X);
-    BigNumber *tmp_Y = copy(Y);
+BigInteger *mul(const BigInteger *X, const BigInteger *Y) {
+    BigInteger *tmp_X = copy(X);
+    BigInteger *tmp_Y = copy(Y);
     tmp_X->sign = 1;
     tmp_Y->sign = 1;
-    BigNumber *res = karatsuba_mul(tmp_X, tmp_Y);
+    BigInteger *res = karatsuba_mul(tmp_X, tmp_Y);
     normalize(res);
+    delRedundantZeros(res);
     res->sign = X->sign * Y->sign;
+    free(tmp_X->body);
+    free(tmp_Y->body);
+    free(tmp_X);
+    free(tmp_Y);
     return res;
 }
 
 
-BigNumber *copy(const BigNumber *a) {
-    BigNumber *res = (BigNumber *) malloc(sizeof(BigNumber));
+BigInteger *copy(const BigInteger *a) {
+    BigInteger *res = (BigInteger *) malloc(sizeof(BigInteger));
     res->sign = a->sign;
     res->intsAmount = a->intsAmount;
     res->body = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE) * res->intsAmount);
@@ -285,29 +290,35 @@ BigNumber *copy(const BigNumber *a) {
     return res;
 }
 
-BigNumber *add(const BigNumber *a, const BigNumber *b) {
-    BigNumber *tmp_a = copy(a);
+BigInteger *add(const BigInteger *a, const BigInteger *b) {
+    BigInteger *tmp_a = copy(a);
     tmp_a->sign = 1;
-    BigNumber *tmp_b = copy(b);
+    BigInteger *tmp_b = copy(b);
     tmp_b->sign = 1;
-    if (a->sign == 1 && b->sign == 1) return _add(tmp_a, tmp_b);
-    else if (a->sign == 1 && b->sign == -1) return sub(tmp_a, tmp_b);
-    else if (a->sign == -1 && b->sign == 1) return sub(tmp_b, tmp_a);
+    BigInteger *res;
+    if (a->sign == 1 && b->sign == 1) res = _add(tmp_a, tmp_b);
+    else if (a->sign == 1 && b->sign == -1) res = sub(tmp_a, tmp_b);
+    else if (a->sign == -1 && b->sign == 1) res = sub(tmp_b, tmp_a);
     else {
-        BigNumber *res = _add(tmp_a, tmp_b);
+        res = _add(tmp_a, tmp_b);
         res->sign = -1;
-        return res;
     }
+    free(tmp_a->body);
+    free(tmp_b->body);
+    free(tmp_a);
+    free(tmp_b);
+    delRedundantZeros(res);
+    return res;
 }
 
-int _absRelation(const BigNumber *a, const BigNumber *b, SIZE last_index) {
+int _absRelation(const BigInteger *a, const BigInteger *b, SIZE last_index) {
     if (a->body[last_index] > b->body[last_index]) return 1;
     else if (a->body[last_index] < b->body[last_index]) return -1;
     else if (last_index == 0) return 0;
     else return _absRelation(a, b, last_index - 1);
 }
 
-int absRelation(BigNumber *a, BigNumber *b) {
+int absRelation(BigInteger *a, BigInteger *b) {
     delRedundantZeros(a);
     delRedundantZeros(b);
     if (a->intsAmount > b->intsAmount) return 1;
@@ -316,28 +327,200 @@ int absRelation(BigNumber *a, BigNumber *b) {
 }
 
 
-BigNumber *sub(const BigNumber *a, const BigNumber *b) {
-    BigNumber *tmp_a = copy(a);
-    BigNumber *tmp_b = copy(b);
+BigInteger *sub(const BigInteger *a, const BigInteger *b) {
+    BigInteger *tmp_a = copy(a);
+    BigInteger *tmp_b = copy(b);
     tmp_a->sign = 1;
     tmp_b->sign = 1;
 
+    BigInteger *res;
     int rel = absRelation(tmp_a, tmp_b);
-    if (a->sign == 1 && b->sign == 1 && rel >= 0) return _sub(tmp_a, tmp_b);
+    if (a->sign == 1 && b->sign == 1 && rel >= 0) res = _sub(tmp_a, tmp_b);
 
     else if (a->sign == 1 && b->sign == 1 && rel == -1){
-        BigNumber *res = _sub(tmp_b, tmp_a);
+        res = _sub(tmp_b, tmp_a);
         res->sign = -1;
-        return res;
     }
     else if (a->sign == -1 && b->sign == 1){
-        BigNumber *res = _add(tmp_a, tmp_b);
+        res = _add(tmp_a, tmp_b);
         res->sign = -1;
-        return res;
     }
-    else if (a->sign == 1 && b->sign == -1) return _add(tmp_a, tmp_b);
+    else if (a->sign == 1 && b->sign == -1) res = _add(tmp_a, tmp_b);
 
-    else if (a->sign == -1 && b->sign == -1){
-        return sub(b, a);
+    else {
+        res = sub(b, a);
     }
+    free(tmp_a->body);
+    free(tmp_b->body);
+    free(tmp_a);
+    free(tmp_b);
+    delRedundantZeros(res);
+    return res;
+}
+
+
+void shiftRight(BigInteger *number) {
+    delRedundantZeros(number);
+    extendBigInteger(number, number->intsAmount+1);
+    for (SIZE itr = number->intsAmount-1; itr > 0; --itr){
+        number->body[itr] = number->body[itr-1];
+    }
+    number->body[0] = 0;
+}
+
+
+BigInteger *divide(const BigInteger *X, const BigInteger *Y) {
+    if (Y->intsAmount == 1 && Y->body[0] == 0){
+        exit(1);
+    }
+
+    BigInteger *tmp_y = copy(Y);
+    tmp_y->sign = 1;
+
+    BigInteger *res = (BigInteger *) malloc(sizeof(BigInteger));
+    res->sign = 1;
+    res->intsAmount = X->intsAmount;
+    res->body = (ELEM_TYPE *) malloc(sizeof(ELEM_TYPE) * res->intsAmount);
+
+    BigInteger *cur = fromChars("0", 1);
+    for (SIZE i = X->intsAmount-1; i >= 0; --i){
+        shiftRight(cur);
+        cur->body[0] = X->body[i];
+        delRedundantZeros(cur);
+        int x = 0, l = 0, r = binPow(10, ELEM_SIZE_NUM);
+        while (l <= r){
+            int m = (l + r) / 2;
+            BigInteger *tmp_m = (BigInteger *) malloc(sizeof(BigInteger));
+            tmp_m->sign = 1;
+            tmp_m->intsAmount = 1;
+            tmp_m->body = (ELEM_TYPE* ) malloc(sizeof(ELEM_TYPE));
+            tmp_m->body[0] = m;
+
+            BigInteger *tmp = mul(tmp_y, tmp_m);
+            if (absRelation(tmp, cur) <= 0){
+                x = m;
+                l = m + 1;
+            } else r = m - 1;
+            free(tmp->body);
+            free(tmp);
+
+            free(tmp_m->body);
+            free(tmp_m);
+        }
+        res->body[i] = x;
+        BigInteger *tmp_x = (BigInteger *) malloc(sizeof(BigInteger));
+        tmp_x->sign = 1;
+        tmp_x->intsAmount = 1;
+        tmp_x->body = (ELEM_TYPE*) malloc(sizeof(ELEM_TYPE));
+        tmp_x->body[0] = x;
+        BigInteger *tmp_cur = mul(tmp_y, tmp_x);
+        BigInteger *tmp_cur2 = sub(cur, tmp_cur);
+        free(cur->body);
+        free(cur);
+        cur = tmp_cur2;
+        free(tmp_cur->body);
+        free(tmp_cur);
+        free(tmp_x->body);
+        free(tmp_x);
+        if (i == 0){
+            break;
+        }
+    }
+    free(tmp_y->body);
+    free(tmp_y);
+    res->sign = X->sign * Y->sign;
+    if (res->sign == -1 && !(cur->intsAmount == 1 && cur->body[0] == 0)){
+        res->body[0] += 1;
+        normalize(res);
+    }
+    delRedundantZeros(res);
+    return res;
+}
+
+
+BigInteger **xgcd(const BigInteger *a, const BigInteger *b) {
+
+    BigInteger *tmp_a = copy(a);
+    tmp_a->sign = 1;
+    BigInteger *tmp_b = copy(b);
+    tmp_b->sign = 1;
+
+    BigInteger **resArray = (BigInteger **) malloc(sizeof(BigInteger *) * 3);
+    if (absRelation(tmp_a, tmp_b) == -1){
+        BigInteger *c = tmp_a;
+        tmp_a = tmp_b;
+        tmp_b = c;
+    }
+
+    if (tmp_b->intsAmount == 1 && tmp_b->body[0] == 0){
+
+        resArray[0] = fromChars("1", 1);
+        resArray[1] = fromChars("0", 1);
+        resArray[2] = copy(tmp_a);
+
+    } else {
+        BigInteger *q = divide(tmp_a, tmp_b);
+        BigInteger *tmp = mul(q, tmp_b);
+        BigInteger *r = sub(tmp_a, tmp);
+        free(tmp->body);
+        free(tmp);
+
+        if (absRelation(tmp_b, r) != 1){
+            exit(1);
+        }
+        BigInteger **preArray = xgcd(tmp_b, r);
+        resArray[0] = preArray[1];
+
+        tmp = mul(q, preArray[1]);
+        resArray[1] = sub(preArray[0], tmp);
+        free(tmp->body);
+        free(tmp);
+
+        resArray[2] =preArray[2];
+        free(preArray[0]->body);
+        free(preArray[0]);
+        free(q->body);
+        free(q);
+        free(r->body);
+        free(r);
+    }
+    free(tmp_a->body);
+    free(tmp_b->body);
+    return resArray;
+}
+
+BigInteger *gcd(const BigInteger *a, const BigInteger *b) {
+
+    BigInteger *tmp_a = copy(a);
+    tmp_a->sign = 1;
+    BigInteger *tmp_b = copy(b);
+    tmp_b->sign = 1;
+
+    while (!(tmp_b->intsAmount == 1 && tmp_b->body[0] == 0)){
+        BigInteger *q = divide(tmp_a, tmp_b);
+        BigInteger *tmp = mul(q, tmp_b);
+        BigInteger *remainder = sub(tmp_a, tmp);
+        free(q->body);
+        free(q);
+        free(tmp->body);
+        free(tmp);
+
+        free(tmp_a->body);
+        free(tmp_a);
+        tmp_a = tmp_b;
+        tmp_b = remainder;
+    }
+    return tmp_a;
+}
+
+
+BigInteger *lcm(const BigInteger *a, const BigInteger *b) {
+    BigInteger *tmp = mul(a, b);
+    BigInteger *_gcd = gcd(a, b);
+    BigInteger *res = divide(tmp, _gcd);
+    free(tmp->body);
+    free(tmp);
+    free(_gcd->body);
+    free(_gcd);
+    return res;
 }
