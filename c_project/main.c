@@ -9,7 +9,7 @@
 // TODO refactor, comments etc.
 
 #include <stdio.h>
-#include "BigNumbers.h"
+#include "headers/BigNumbers.h"
 
 BigInteger *read(){
     char *number = (char *) malloc(sizeof(char) * 1000);
