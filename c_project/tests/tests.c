@@ -77,30 +77,47 @@ void testPrint(){
 }
 
 
+void testWrite(){
+    FILE *test_f = fopen(".../tests/output.txt", "w");
+    if (test_f == NULL){
+        printf("Couldn't open the file.");
+        return;
+    }
+    fprintf(test_f, "%s", "testing print big number 29837492837492837492837492374982:\n");
+    fprint(test_f, fromChars("29837492837492837492837492374982", 32));
+    fprintf(test_f, "%s", "testing print big number 10000000000000800000000000000010:\n");
+    fprint(test_f, fromChars("10000000000000800000000000000010", 32));
+    fclose(test_f);
+}
+
+
 void testInput(){
-    printf("%s", "please, enter the any big number in decimal system:\n");
+    printf("%s", "please, enter the any big number in decimal system:\n--> ");
     BigInteger *test = inputBigInt();
     printf("%s", "did you input this number (y/n)?: ");
     print(test);
+    printf("--> ");
     char *ans = (char*) malloc(sizeof(char)*100);
     fgets(ans, 100, stdin);
     assert(ans[0] == 'y' || ans[0] == 'Y');
     free(test->body);
     free(test);
 
-    printf("%s", "please, enter the any big number in hexadecimal system:\n");
+    printf("%s", "please, enter the any big number in hexadecimal system:\n--> ");
     BigInteger *test2 = inputAnyBigInt(16);
     printf("%s", "did you input this number (y/n)?: ");
     print(test2);
+    printf("--> ");
     fgets(ans, 100, stdin);
     assert(ans[0] == 'y' || ans[0] == 'Y');
     free(test2->body);
     free(test2);
 
-    printf("%s", "please, enter the any big number in binary system:\n");
+    printf("%s", "please, enter the any big number in binary system:\n--> ");
     BigInteger *test3 = inputAnyBigInt(16);
     printf("%s", "did you input this number (y/n)?: ");
     print(test3);
+    printf("--> ");
     fgets(ans, 100, stdin);
     assert(ans[0] == 'y' || ans[0] == 'Y');
     free(test3->body);
@@ -446,7 +463,7 @@ void testLcm(){
 
 
 void testRead(){
-    FILE *test_f = fopen("/home/davidas/Документы/univer/c-cpp_course2/c_project/tests/tests_input.txt", "r");
+    FILE *test_f = fopen(".../tests/tests_input.txt", "r");
 
     if (test_f == NULL){
         printf("%s", "couldn't open the file with tests");
@@ -498,9 +515,12 @@ int main(){
     testLcm();
     printf("%s", "\n\nSUCCESS, start print tests...\n\n");
     testPrint();
+    printf("%s", "\n\nSUCCESS, start filewrite tests...\n\n");
+    testWrite();
+
     printf("%s", "\n\nSUCCESS, start input tests...\n\n");
     testInput();
-    printf("%s", "\n\nSUCCESS, start read tests...\n\n");
+    printf("%s", "\n\nSUCCESS, start fileread tests...\n\n");
     testRead();
     printf("%s", "\n\nSUCCESS, finish...");
 }

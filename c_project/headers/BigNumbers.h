@@ -25,7 +25,10 @@
 #define ELEM_SIZE_NUM 8
 
 typedef size_t SIZE;         // type that provides to contain max size of an array
-typedef long int ELEM_TYPE;  // type of BigInteger elements
+typedef long int  ELEM_TYPE;  // type of BigInteger elements
+typedef long int  INT;
+typedef int SMALL_INT;
+typedef char SYMBOL;
 
 #define MAX(a, b)       a > b ? a : b
 #define MIN(a, b)       a < b ? a : b
@@ -37,7 +40,7 @@ typedef long int ELEM_TYPE;  // type of BigInteger elements
  * intsAmount - amount of elements in body*/
 typedef struct BigInteger{
     size_t intsAmount;
-    int sign;
+    SMALL_INT sign;
     ELEM_TYPE *body;
 } BigInteger;
 
@@ -53,14 +56,14 @@ typedef struct BigInteger{
  *
  * @param numb: symbol of digit
  * */
-int convert2int(char numb);
+SMALL_INT convert2int(SYMBOL numb);
 
 
 /* Binary raise to the power of integer number.
  *
  * @param a: number
  * @param n: power*/
-long int binPow(long int a, long int n);
+INT  binPow(INT a, SMALL_INT n);
 
 
 /* Create copy of BigInteger. */
@@ -73,7 +76,7 @@ BigInteger *copy(const BigInteger *a);
  *                given numerical system
  * @param size: size of array
  * @param base: base of numerical system the array of chars is represented in*/
-BigInteger *fromOtherChars(const char *number, SIZE size, int base);
+BigInteger *fromOtherChars(const SYMBOL *number, SIZE size, SMALL_INT base);
 
 
 /* Optimized parsing BigInteger from an array of chars in decimal case.
@@ -81,7 +84,7 @@ BigInteger *fromOtherChars(const char *number, SIZE size, int base);
  *
  * @param number: array of chars that contains only digits
  * @param size: size of array*/
-BigInteger *fromChars(const char *number, SIZE size);
+BigInteger *fromChars(const SYMBOL *number, SIZE size);
 
 
 /* Create BigInteger from standard c integer.*/
@@ -91,16 +94,18 @@ BigInteger *fromInt(ELEM_TYPE num);
 /* Print BigInteger in stdout. */
 void print(const BigInteger *a);
 
+void fprint(FILE *file, const BigInteger *a);
+
 
 BigInteger *readBigInt(FILE *input);
 
 
-BigInteger *readAnyBigInt(int base, FILE *input);
+BigInteger *readAnyBigInt(SMALL_INT base, FILE *input);
 
 
 BigInteger *inputBigInt();
 
-BigInteger *inputAnyBigInt(int base);
+BigInteger *inputAnyBigInt(SMALL_INT base);
 
 /* Delete leading zero elements of BigInteger. */
 void delRedundantZeros(BigInteger *a);
@@ -111,7 +116,7 @@ void delRedundantZeros(BigInteger *a);
  * @param a: first BigInteger
  * @param b: second BigInteger
  * return: 1 if |a| > |b|, 0 if |a| == |b| and -1 otherwise */
-int absRelation(BigInteger *a, BigInteger *b);
+SMALL_INT absRelation(BigInteger *a, BigInteger *b);
 
 
 /* Addition recursive function of comparing.
@@ -121,7 +126,7 @@ int absRelation(BigInteger *a, BigInteger *b);
  * @param b: second BigInteger
  * @param last_index: index of elements that comparing at the moment
  * return: 1 if |a| > |b|, 0 if |a| == |b| and -1 otherwise */
-int _absRelation(const BigInteger *a, const BigInteger *b, SIZE last_index);
+SMALL_INT _absRelation(const BigInteger *a, const BigInteger *b, SIZE last_index);
 
 
 /* Adding of two normalized BigIntegers (it means that each hasn't

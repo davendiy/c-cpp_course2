@@ -9,8 +9,9 @@
 const char GLOBAL_NUMBERS[] = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 
-long int binPow(long int a, long int n) {
-    long int res = 1;
+
+INT binPow(INT a, SMALL_INT n) {
+    INT res = 1;
     while (n) {
         if (n & 1)
             res *= a;
@@ -21,10 +22,10 @@ long int binPow(long int a, long int n) {
 }
 
 
-int convert2int(char numb) {
-    int res = -1;
+SMALL_INT convert2int(SYMBOL numb) {
+    SMALL_INT res = -1;
     // find the given character in GLOBAL_NUMBERS
-    for (int itr = 0; itr < 36; ++itr){
+    for (SMALL_INT itr = 0; itr < 36; ++itr){
         if (GLOBAL_NUMBERS[itr] == numb){
             res = itr;
             break;
@@ -55,9 +56,9 @@ BigInteger *fromInt(ELEM_TYPE num) {
     return res;
 }
 
-BigInteger *fromChars(const char *number, SIZE size) {
+BigInteger *fromChars(const SYMBOL *number, SIZE size) {
     BigInteger *res = (BigInteger *) malloc(sizeof(BigInteger));
-    int start = 0;   // start of number (0 if there is no '-' and 1 otherwise)
+    SMALL_INT start = 0;   // start of number (0 if there is no '-' and 1 otherwise)
     if (number[0] == '-') {    // check if the first char == '-'
         res->sign = -1;
         res->intsAmount = (size-1) / ELEM_SIZE_NUM + 1;
@@ -73,16 +74,16 @@ BigInteger *fromChars(const char *number, SIZE size) {
         res->body[itr] = 0;
     }
 
-    int tmp = 0;
+    SMALL_INT tmp = 0;
     SIZE elemIndex = 0;
 
     // read each of ELEM_SIZE_NUM digits starting at the end of number and write it
     // to array
-    for (int itr = size-1; itr >= start; --itr){
-        for (int itr2 = 0; itr2 < ELEM_SIZE_NUM; ++itr2){
-            char tmp_char = number[itr];
+    for (SMALL_INT itr = size-1; itr >= start; --itr){
+        for (SMALL_INT itr2 = 0; itr2 < ELEM_SIZE_NUM; ++itr2){
+            SYMBOL tmp_char = number[itr];
             tmp = atoi(&tmp_char);
-            tmp *= (int ) binPow(10, itr2);
+            tmp *= (SMALL_INT ) binPow(10, itr2);
             res->body[elemIndex] += tmp;
             --itr;
             if (itr < start) break;
@@ -95,9 +96,9 @@ BigInteger *fromChars(const char *number, SIZE size) {
 }
 
 
-BigInteger *fromOtherChars(const char *number, SIZE size, int base) {
+BigInteger *fromOtherChars(const SYMBOL *number, SIZE size, SMALL_INT base) {
     BigInteger *res = fromInt(0);
-    int start = 0;              // start index of number digits
+    SMALL_INT start = 0;              // start index of number digits
     if (number[start] == '-'){  // check if the first char is '-'
         res->sign = -1;
         start = 1;
@@ -111,7 +112,7 @@ BigInteger *fromOtherChars(const char *number, SIZE size, int base) {
 
     BigInteger *multiplier = fromInt(1);     // base^i
     BigInteger *bigBase = fromInt(base);     // BigInteger(base)
-    int tmp_num;
+    SMALL_INT tmp_num;
 
     // read each char of given number, multiply it by base^i and add to the result number
     for (SIZE itr = size-1; itr >= start; --itr){
@@ -148,23 +149,27 @@ BigInteger *fromOtherChars(const char *number, SIZE size, int base) {
 
 
 void print(const BigInteger *a) {
+    fprint(stdout, a);
+}
+
+
+void fprint(FILE *file, const BigInteger *a){
     if (a->sign == -1){
-        printf("-");
+        fprintf(file, "-");
     }
     SIZE start = a->intsAmount -1;
 
     // miss the leading zero elements if given BigInteger hasn't been normalized
     while (a->body[start] == 0 && start > 0) start--;
-    printf("%ld", a->body[start]);    // print the last element without zero separators
+    fprintf(file, "%ld", a->body[start]);    // print the last element without zero separators
     if (start > 0) {
 
         // print other elements with zero separators
-        for (int itr = start - 1; itr >= 0; itr--)
-            printf("%08ld", a->body[itr]);
+        for (SMALL_INT itr = start - 1; itr >= 0; itr--)
+            fprintf(file, "%08ld", a->body[itr]);
     }
-    printf("\n");
+    fprintf(file, "\n");
 }
-
 
 void delRedundantZeros(BigInteger *a) {
 
@@ -211,8 +216,8 @@ BigInteger *add(const BigInteger *a, const BigInteger *b) {
 
 BigInteger *_add(const BigInteger *a, const BigInteger *b) {
 
-    int carry = 0;
-    int base = binPow(10, ELEM_SIZE_NUM);
+    SMALL_INT carry = 0;
+    SMALL_INT base = binPow(10, ELEM_SIZE_NUM);
 
     // create the result BigInteger of length equal to max of lengths a and b
     BigInteger *res = (BigInteger *) malloc(sizeof(BigInteger));
@@ -242,7 +247,7 @@ BigInteger *sub(const BigInteger *a, const BigInteger *b) {
     tmp_b->sign = 1;
 
     BigInteger *res;
-    int rel = absRelation(tmp_a, tmp_b);
+    SMALL_INT rel = absRelation(tmp_a, tmp_b);
 
     // do different operations for each of possible situations
     if (a->sign == 1 && b->sign == 1 && rel >= 0) res = _sub(tmp_a, tmp_b);
@@ -273,8 +278,8 @@ BigInteger *sub(const BigInteger *a, const BigInteger *b) {
 
 BigInteger *_sub(const BigInteger *a, const BigInteger *b) {
 
-    int carry = 0;
-    int base = binPow(10, ELEM_SIZE_NUM);
+    SMALL_INT carry = 0;
+    SMALL_INT base = binPow(10, ELEM_SIZE_NUM);
 
     // create the result BigInteger of length equal to max of lengths a and b
     BigInteger *res = (BigInteger *) malloc(sizeof(BigInteger));
@@ -473,7 +478,7 @@ BigInteger *copy(const BigInteger *a) {
     return res;
 }
 
-int absRelation(BigInteger *a, BigInteger *b) {
+SMALL_INT absRelation(BigInteger *a, BigInteger *b) {
     delRedundantZeros(a);    // prepare parameters
     delRedundantZeros(b);
     normalize(a);
@@ -487,7 +492,7 @@ int absRelation(BigInteger *a, BigInteger *b) {
     else return _absRelation(a, b, a->intsAmount-1);
 }
 
-int _absRelation(const BigInteger *a, const BigInteger *b, SIZE last_index) {
+SMALL_INT _absRelation(const BigInteger *a, const BigInteger *b, SIZE last_index) {
 
     // recursively check i-th elements of BigIntegers
     if (a->body[last_index] > b->body[last_index]) return 1;
@@ -535,9 +540,9 @@ BigInteger *divide(const BigInteger *X, const BigInteger *Y) {
         delRedundantZeros(cur);
 
         // find the quotient using binary search
-        int x = 0, l = 0, r = binPow(10, ELEM_SIZE_NUM);
+        SMALL_INT x = 0, l = 0, r = binPow(10, ELEM_SIZE_NUM);
         while (l <= r){
-            int m = (l + r) / 2;
+            SMALL_INT m = (l + r) / 2;
             BigInteger *tmp_m = fromInt(m);
             BigInteger *tmp = mul(tmp_y, tmp_m);
             if (absRelation(tmp, cur) <= 0){
@@ -629,7 +634,7 @@ BigInteger *lcm(const BigInteger *a, const BigInteger *b) {
 
 
 BigInteger *readBigInt(FILE *input) {
-    char *number = (char *) malloc(sizeof(char) * 1000);
+    SYMBOL *number = (SYMBOL *) malloc(sizeof(char) * 1000);
     fgets(number, 1000, input);
     SIZE size = 0;
     while ((number[size] != '\n' && number[size] != ' ') && size < 1000) size++;
@@ -638,8 +643,8 @@ BigInteger *readBigInt(FILE *input) {
     return res;
 }
 
-BigInteger *readAnyBigInt(int base, FILE *input) {
-    char *number = (char *) malloc(sizeof(char) * 1000);
+BigInteger *readAnyBigInt(SMALL_INT base, FILE *input) {
+    SYMBOL *number = (SYMBOL *) malloc(sizeof(char) * 1000);
     fgets(number, 1000, input);
     SIZE size = 0;
     while ((number[size] != '\n' && number[size] != ' ') && size < 1000) size++;
@@ -648,7 +653,7 @@ BigInteger *readAnyBigInt(int base, FILE *input) {
     return res;
 }
 
-BigInteger *inputAnyBigInt(int base) {
+BigInteger *inputAnyBigInt(SMALL_INT base) {
     return readAnyBigInt(base, stdin);
 }
 
