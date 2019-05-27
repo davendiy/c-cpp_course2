@@ -585,65 +585,6 @@ BigInteger *divide(const BigInteger *X, const BigInteger *Y) {
 }
 
 
-BigInteger **xgcd(const BigInteger *a, const BigInteger *b) {
-
-    // local absolute values of parameters
-    BigInteger *tmp_a = copy(a);
-    tmp_a->sign = 1;
-    BigInteger *tmp_b = copy(b);
-    tmp_b->sign = 1;
-
-    // prepare the result - array of BigIntegers
-    BigInteger **resArray = (BigInteger **) malloc(sizeof(BigInteger *) * 3);
-
-    // if b > a - swap each other
-    if (absRelation(tmp_a, tmp_b) == -1){
-        BigInteger *c = tmp_a;
-        tmp_a = tmp_b;
-        tmp_b = c;
-    }
-
-    // if b == 0 answer is obvious
-    if (tmp_b->intsAmount == 1 && tmp_b->body[0] == 0){
-        resArray[0] = fromInt(1);
-        resArray[1] = fromInt(0);
-        resArray[2] = copy(tmp_a);
-
-    } else {
-        // compute values of quotient and remainder
-        BigInteger *q = divide(tmp_a, tmp_b);
-        BigInteger *tmp = mul(q, tmp_b);
-        BigInteger *r = sub(tmp_a, tmp);
-        free(tmp->body);
-        free(tmp);
-//
-//        // for debugging
-//        if (absRelation(tmp_b, r) != 1){
-//            exit(1);
-//        }
-
-        // recursively compute xgcd for b and remainder
-        // and compute the answer
-        BigInteger **preArray = xgcd(tmp_b, r);
-        resArray[0] = preArray[1];
-        tmp = mul(q, preArray[1]);
-        resArray[1] = sub(preArray[0], tmp);
-        free(tmp->body);
-        free(tmp);
-
-        resArray[2] =preArray[2];
-        free(preArray[0]->body);
-        free(preArray[0]);          // free the memory of temporary variables
-        free(q->body);
-        free(q);
-        free(r->body);
-        free(r);
-    }
-    free(tmp_a->body);
-    free(tmp_b->body);
-    return resArray;
-}
-
 BigInteger *gcd(const BigInteger *a, const BigInteger *b) {
 
     // local absolute values of parameters
@@ -684,5 +625,100 @@ BigInteger *lcm(const BigInteger *a, const BigInteger *b) {
     free(_gcd->body);
     free(_gcd);
     return res;
+}
+
+
+BigInteger *readBigInt(FILE *input) {
+    char *number = (char *) malloc(sizeof(char) * 1000);
+    fgets(number, 1000, input);
+    SIZE size = 0;
+    while ((number[size] != '\n' && number[size] != ' ') && size < 1000) size++;
+    BigInteger *res = fromChars(number, size);
+    free(number);
+    return res;
+}
+
+BigInteger *readAnyBigInt(int base, FILE *input) {
+    char *number = (char *) malloc(sizeof(char) * 1000);
+    fgets(number, 1000, input);
+    SIZE size = 0;
+    while ((number[size] != '\n' && number[size] != ' ') && size < 1000) size++;
+    BigInteger *res = fromOtherChars(number, size, base);
+    free(number);
+    return res;
+}
+
+BigInteger *inputAnyBigInt(int base) {
+    return readAnyBigInt(base, stdin);
+}
+
+BigInteger *inputBigInt() {
+    return readBigInt(stdin);
+}
+
+BigInteger **xgcd(const BigInteger *a, const BigInteger *b) {
+    // local absolute values of parameters
+    BigInteger *tmp_a = copy(a);
+    tmp_a->sign = 1;
+    BigInteger *tmp_b = copy(b);
+    tmp_b->sign = 1;
+
+    // if b > a - swap each other
+    if (absRelation(tmp_a, tmp_b) == -1) {
+        BigInteger **res = _xgcdHelper(tmp_b, tmp_a);
+        BigInteger *tmp = res[0];
+        res[0] = res[1];
+        res[1] = tmp;
+        return res;
+    } else {
+        return _xgcdHelper(tmp_a, tmp_b);
+    }
+}
+
+
+BigInteger **_xgcdHelper(BigInteger *a, BigInteger *b) {
+
+    // prepare the result - array of BigIntegers
+    BigInteger **resArray = (BigInteger **) malloc(sizeof(BigInteger *) * 3);
+
+    // if b == 0 answer is obvious
+    if (b->intsAmount == 1 && b->body[0] == 0){
+        resArray[0] = fromInt(1);
+        resArray[1] = fromInt(0);
+        resArray[2] = copy(a);
+
+    } else {
+        // compute values of quotient and remainder
+        BigInteger *q = divide(a, b);
+        BigInteger *tmp = mul(q, b);
+        BigInteger *r = sub(a, tmp);
+        free(tmp->body);
+        free(tmp);
+//
+//        // for debugging
+//        if (absRelation(b, r) != 1){
+//            exit(1);
+//        }
+
+        // recursively compute xgcd for b and remainder
+        // and compute the answer
+        BigInteger **preArray = xgcd(b, r);
+        resArray[0] = preArray[1];
+        tmp = mul(q, preArray[1]);
+        resArray[1] = sub(preArray[0], tmp);
+        free(tmp->body);
+        free(tmp);
+
+        resArray[2] =preArray[2];
+        free(preArray[0]->body);
+        free(preArray[0]);          // free the memory of temporary variables
+        free(q->body);
+        free(q);
+        free(r->body);
+        free(r);
+    }
+    free(a->body);
+    free(b->body);
+    return resArray;
 }
 

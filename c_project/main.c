@@ -11,33 +11,12 @@
 #include <stdio.h>
 #include "headers/BigNumbers.h"
 
-BigInteger *read(){
-    char *number = (char *) malloc(sizeof(char) * 1000);
-    fgets(number, 1000, stdin);
-    SIZE size = 0;
-    while ((number[size] != '\n' && number[size] != ' ') && size < 1000) size++;
-    BigInteger *res = fromChars(number, size);
-    free(number);
-    return res;
-}
-
-
-BigInteger *readAny(int base){
-    char *number = (char *) malloc(sizeof(char) * 1000);
-    fgets(number, 1000, stdin);
-    SIZE size = 0;
-    while ((number[size] != '\n' && number[size] != ' ') && size < 1000) size++;
-    BigInteger *res = fromOtherChars(number, size, base);
-    free(number);
-    return res;
-}
-
 
 int main() {
 
 
-    BigInteger *num1 = read();
-    BigInteger *num2 = read();
+    BigInteger *num1 = inputBigInt();
+    BigInteger *num2 = inputBigInt();
 
     BigInteger *res_add = add(num1, num2);
 
@@ -77,11 +56,11 @@ int main() {
     print(lcm(num1, num2));
 
     printf("please, enter the number in binary system:\n");
-    BigInteger *num3 = readAny(2);
+    BigInteger *num3 = inputAnyBigInt(2);
     print(num3);
 
     printf("please, enter the number in hexadecimal system:\n");
-    BigInteger *num4 = readAny(16);
+    BigInteger *num4 = inputAnyBigInt(16);
     print(num4);
     return 0;
 }

@@ -92,6 +92,16 @@ BigInteger *fromInt(ELEM_TYPE num);
 void print(const BigInteger *a);
 
 
+BigInteger *readBigInt(FILE *input);
+
+
+BigInteger *readAnyBigInt(int base, FILE *input);
+
+
+BigInteger *inputBigInt();
+
+BigInteger *inputAnyBigInt(int base);
+
 /* Delete leading zero elements of BigInteger. */
 void delRedundantZeros(BigInteger *a);
 
@@ -167,6 +177,9 @@ BigInteger *divide(const BigInteger *X, const BigInteger *Y);
  *
  * Returns the array of BigIntegers: x, y and gcd*/
 BigInteger **xgcd(const BigInteger *a, const BigInteger *b);
+
+/* Auxiliary function for xgcd. Finds the xgcd for a >= b*/
+BigInteger **_xgcdHelper(BigInteger *a, BigInteger *b);
 
 
 /* Euclidean algorithm for BigIntegers.
